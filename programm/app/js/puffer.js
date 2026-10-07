@@ -8,7 +8,7 @@ const puffer = {
     cfg: null,          // letzte Decoder-Beschreibung des Encoders
     festAb: null,       // Stücke ab dieser Zeit (ms) nicht wegwerfen
     enc: null,
-    leser: null,
+    kopie: null,        // eigene Kopie der Kameraspur; stoppen beendet sie, die Schleife gibt den Rest frei
     bytes: 0,
     speichertGerade: false,
 
@@ -79,8 +79,9 @@ const puffer = {
         enc.configure(konfig);
         this.enc = enc;
 
-        const leser = new MediaStreamTrackProcessor({ track: spur.clone() }).readable.getReader();
-        this.leser = leser;
+        const kopie = spur.clone();
+        this.kopie = kopie;
+        const leser = new MediaStreamTrackProcessor({ track: kopie }).readable.getReader();
         let leinwand = null, letzterKey = -Infinity;
         (async () => {
             for (;;) {
@@ -109,8 +110,9 @@ const puffer = {
     },
 
     stoppen(neustart = false) {
-        this.leser?.cancel().catch(() => {});
-        this.leser = null;
+        // Nicht den Leser abbrechen: Bilder in seiner Warteschlange blieben sonst ungeschlossen liegen
+        this.kopie?.stop();
+        this.kopie = null;
         if (this.enc && this.enc.state !== 'closed') this.enc.close();
         this.enc = null;
         this.laeuft = false;

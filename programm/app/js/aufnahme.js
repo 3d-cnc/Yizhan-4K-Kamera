@@ -6,7 +6,7 @@ const aufnahme = {
     bytes: 0,
     kette: Promise.resolve(),   // Videostücke in der richtigen Reihenfolge schreiben
     leinwand: null,     // für gespiegelte Aufnahmen
-    leser: null,
+    kopie: null,
     intervall: null,
 
     init() {
@@ -141,14 +141,19 @@ const aufnahme = {
         const x = c.getContext('2d', { alpha: false, desynchronized: true });
         const ausgabe = c.captureStream(0);
         const ziel = ausgabe.getVideoTracks()[0];
-        const leser = new MediaStreamTrackProcessor({ track: spur.clone() });
-        this.leser = leser.readable.getReader();
+        const kopie = spur.clone();
+        this.kopie = kopie;
+        const r = new MediaStreamTrackProcessor({ track: kopie }).readable.getReader();
         this.leinwand = { c, ziel };
-        const r = this.leser;
         (async () => {
             for (;;) {
                 const { value: bild, done } = await r.read().catch(() => ({ done: true }));
                 if (done) break;
+                // Nach dem Ende nur noch die restlichen Bilder freigeben
+                if (this.kopie !== kopie) {
+                    bild.close();
+                    continue;
+                }
                 ansicht.bildZeichnen(x, c.width, c.height, bild);
                 bild.close();
                 ziel.requestFrame();
@@ -158,9 +163,9 @@ const aufnahme = {
     },
 
     spiegelEnde() {
-        if (!this.leser) return;
-        this.leser.cancel().catch(() => {});
-        this.leser = null;
+        if (!this.kopie) return;
+        this.kopie.stop();
+        this.kopie = null;
         this.leinwand?.ziel.stop();
         this.leinwand = null;
     },

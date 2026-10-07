@@ -1,7 +1,7 @@
 Yizhan 4K Kamera
 ================
 
-Starten: Yizhan-4K-Kamera-V1.1.0.exe doppelklicken (keine Installation nötig).
+Starten: Yizhan-4K-Kamera-V1.1.1.exe doppelklicken (keine Installation nötig).
 Die Kamera per USB anstecken – das Programm nimmt sie von selbst
 (sie meldet sich unter Windows als „4K Camera“).
 
@@ -43,4 +43,9 @@ Was die Kamera wirklich kann (am 07.10.2026 ausgelesen)
   des Herstellers; der Bildsensor liefert 8,3 Megapixel.
   Regler: Helligkeit, Kontrast, Sättigung, Schärfe, Belichtung (Auto oder Stufe
   −6 … +2), Belichtungskorrektur, Weißabgleich (Auto oder fest).
+  Bei wenig Licht und automatischer Belichtung sinkt die Bildrate (gemessen bis
+  auf 7–9 Bilder pro Sekunde). Für flüssige Videos mehr Licht oder die Belichtung
+  von Hand auf Stufe −3 bis 0 stellen.
+  Der feste Weißabgleich der Kamera färbt das Bild lila – das Programm nimmt
+  deshalb von selbst die Automatik.
   Kein Mikrofon – Videos sind ohne Ton.

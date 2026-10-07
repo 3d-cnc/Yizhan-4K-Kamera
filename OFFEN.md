@@ -4,7 +4,8 @@ Vorschläge heißen YZ-1, YZ-2 … und werden nie neu vergeben. Nächste freie N
 
 ## Zu klären
 
-- **Bild schwarz (07.10.2026):** Die Kamera liefert 28–30 Bilder/s in 4K, aber jedes Bild ist komplett schwarz (alle Werte 0), auch bei Helligkeit 100 und längster Belichtung. Die Übertragung funktioniert (Gegenprobe mit künstlichem Bild). Vermutung: Objektivdeckel, Kamera zeigt ins Dunkle oder HDMI-Ausgang hat Vorrang. Erst wenn ein Bild kommt, lässt sich prüfen, ob die Regler wirklich wirken.
+- **Bildrate bei Automatik (07.10.2026):** Mit automatischer Belichtung belichtet die Kamera bei wenig Licht länger und liefert dann nur 7–9 Bilder/s (gemessen vor einem Bildschirm). Von Hand auf Stufe −3 bis 0 gestellt: 27–30 Bilder/s, Stufe +2: 25. Wer flüssige Videos braucht, mehr Licht oder Belichtung von Hand. Ob sich die Kamera zwingen lässt, die Bildrate zu halten („Auto Exposure Priority“), gehört zu YZ-1.
+- **Am Gerät geprüft (07.10.2026, Deckel ab, Blende offen):** Alle Regler wirken: Helligkeit (0 → 100: mittlere Helligkeit 70 → 195), Kontrast, Sättigung (0 = grau), Schärfe, Belichtungskorrektur, Belichtung von Hand (Stufe −6 schwarz, +2 hell), Weißabgleich. Die Kamera startet mit festem Weißabgleich auf 2144, das färbt lila (zu wenig Grün); „Farbtemperatur“ ist keine Kelvin-Angabe – höhere Werte machen das Bild röter. Seit 1.1.1 startet das Programm deshalb mit Automatik für Weißabgleich und Belichtung, „Standard“ heißt ebenfalls Automatik.
 - **Noch nicht ausprobiert:** Kamera während des Betriebs abziehen und wieder anstecken (eingebaut: laufende Aufnahme wird gesichert, das Bild kommt von selbst zurück) und Schließen während einer Videoaufnahme (eingebaut: Nachfrage, dann wird die Datei sauber abgeschlossen).
 - Die Kamera hat neben der Bildschnittstelle eine zweite USB-Schnittstelle „RNDIS“ (Netzwerk über USB, MI_00), für die Windows keinen Treiber hat (Status: Fehler). Für das Programm nicht nötig.
 
@@ -42,5 +43,6 @@ Vorschläge heißen YZ-1, YZ-2 … und werden nie neu vergeben. Nächste freie N
 
 ## Umgesetzt
 
+- 1.1.1 (07.10.2026): Start und „Standard“ mit Automatik für Weißabgleich und Belichtung; beim Abschalten von Rückblick und gespiegelter Aufnahme werden alle Kamerabilder sauber freigegeben (vorher Warnung im Selbsttest).
 - 1.1.0 (07.10.2026): YZ-14 Rückblick (30–300 s, Taste B), YZ-15 Überwachung (Bereich, Empfindlichkeit mit Anzeige, Foto/Video mit Vorlauf/Meldung, Ruhezeit, Stillstand-Alarm, Ton), YZ-16 Fokus-Peaking und Zebra (Tasten P/Z, Empfindlichkeit, Farbe, Schwelle), YZ-18 Abspieler (Bild für Bild, Zeitlupe, Einzelbild speichern, Schnitt speichern). Seitenleiste in Reitern Aufnahme/Bild/Überwachung, Histogramm bleibt unten. Mit der echten Kamera geprüft, soweit ein schwarzes Bild das zulässt (Bewegung und Peaking nur mit dem Testbild).
 - 1.0.0 (07.10.2026): Live-Bild bis 4K/30, Auflösung wählbar, Zoom (Mausrad, Ziehen, 1:1), Spiegeln, Fadenkreuz, Raster (3–16, Farbe wählbar), Standbild, Vollbild; Foto (JPG/PNG, volle Auflösung), Video (MP4/H.264 oder WebM/VP9, 10–50 Mbit/s, stückweise auf die Platte, Platzanzeige, stoppt bei fast voller Platte), Intervallfotos; Regler aus der Kamera mit Auto-Schaltern, gemerkt je Kamera, „Standard“; Histogramm mit Anteil Schwarz/Weiß, Schärfewert der Bildmitte mit Bestwert; Galerie mit Vorschau, Öffnen, im Ordner zeigen, Kopieren, Papierkorb; Hell/Dunkel.

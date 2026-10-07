@@ -184,6 +184,12 @@ const regler = {
             if (!(r.k in s)) continue;
             if (!(r.k in werk)) { werk[r.k] = s[r.k]; neu = true; }
             if (r.modus && r.modus in s && !(r.modus in werk)) { werk[r.modus] = s[r.modus]; neu = true; }
+            // „Standard“ heißt Automatik, wo die Kamera eine hat: Die Yizhan startet mit festem Weißabgleich
+            // auf einem Wert, der das Bild lila färbt (gemessen 07.10.2026)
+            if (r.modus && Array.isArray(f[r.modus]) && f[r.modus].includes('continuous') && werk[r.modus] !== 'continuous') {
+                werk[r.modus] = 'continuous';
+                neu = true;
+            }
         }
         if (neu) speicher.schreiben(this.schluessel + '.werk', werk);
         this.werk = werk;
@@ -203,8 +209,8 @@ const regler = {
         }
         // Zuletzt eingestellte Werte wieder anwenden
         const gemerkt = speicher.lesen(this.schluessel, null);
-        if (gemerkt) this.anwenden(gemerkt, false);
-        else this.anzeigen();
+        // Noch nichts eingestellt: mit den Standardwerten anfangen (Automatik für Belichtung und Weißabgleich)
+        this.anwenden(gemerkt ?? werk, false);
     },
 
     zeile(r, fk, modi) {
@@ -278,6 +284,8 @@ const regler = {
         const auftrag = {};
         for (const r of REGLER) {
             if (r.modus && r.modus in werte && Array.isArray(f[r.modus])) auftrag[r.modus] = werte[r.modus];
+            // Bei Automatik keinen festen Wert mitschicken – manche Treiber schalten sonst auf „fest“ zurück
+            if (auftrag[r.modus] === 'continuous') continue;
             if (r.k in werte && f[r.k]) auftrag[r.k] = Math.min(f[r.k].max, Math.max(f[r.k].min, Number(werte[r.k])));
         }
         try {

@@ -450,6 +450,9 @@ async function selbsttest() {
         }
         pruefe(lauf?.bilder > 10, `Live-Bild läuft (${lauf?.kamera}, ${lauf?.breite}×${lauf?.hoehe}, ${lauf?.fps} B/s)`);
         pruefe(lauf?.regler > 0, `Regler aus der Kamera gebaut (${lauf?.regler})`);
+        await warte(500);
+        const wb = await js('(() => { const f = kamera.spur.getCapabilities(), s = kamera.spur.getSettings(); return { kann: (f.whiteBalanceMode ?? []).includes("continuous"), ist: s.whiteBalanceMode, belichtung: s.exposureMode }; })()');
+        pruefe(!wb.kann || wb.ist === 'continuous', `Weißabgleich startet automatisch (${wb.ist}, Belichtung ${wb.belichtung})`);
 
         const groesse = await js('[innerWidth, innerHeight, document.documentElement.scrollHeight, document.querySelector("#seitenleiste").scrollHeight - document.querySelector("#seitenleiste").clientHeight]');
         pruefe(groesse[0] === BREITE && groesse[1] === HOEHE, `Fensterinhalt ${groesse[0]}×${groesse[1]}`);
@@ -580,7 +583,7 @@ async function selbsttest() {
         await js(`galerie.oeffnen(galerie.sichtbar().findIndex((d) => d.name === ${JSON.stringify(rueck?.name ?? '')}))`);
         await warte(1500);
         const ab0 = await js('({ fps: abspieler.fps, dauer: abspieler.dauer, bilder: abspieler.zeiten?.length ?? 0 })');
-        pruefe(ab0.dauer > 3 && ab0.fps > 10 && ab0.bilder > 50, `Abspieler kennt Dauer, Bildrate und Bildzeiten (${ab0.dauer.toFixed(2)} s, ${ab0.fps.toFixed(1)} B/s, ${ab0.bilder} Bilder)`);
+        pruefe(ab0.dauer > 3 && ab0.fps > 3 && ab0.bilder > 15, `Abspieler kennt Dauer, Bildrate und Bildzeiten (${ab0.dauer.toFixed(2)} s, ${ab0.fps.toFixed(1)} B/s, ${ab0.bilder} Bilder)`);
         await js('abspieler.springen(1)');
         await warte(500);
         const n1 = await js('abspieler.bildNummer()');
