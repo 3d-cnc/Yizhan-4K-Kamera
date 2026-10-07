@@ -32,22 +32,40 @@ const ansicht = {
             this.zoomUm(this.zoom * (e.deltaY < 0 ? 1.2 : 1 / 1.2), e.clientX - r.left, e.clientY - r.top);
         }, { passive: false });
         let zug = null;
+        // Bühnenkoordinaten eines Zeigerereignisses
+        const punkt = (e) => {
+            const r = this.buehne.getBoundingClientRect();
+            return [e.clientX - r.left, e.clientY - r.top];
+        };
         this.buehne.addEventListener('pointerdown', (e) => {
             if (e.button !== 0) return;
-            zug = { x: e.clientX, y: e.clientY, ox: this.ox, oy: this.oy };
             this.buehne.setPointerCapture(e.pointerId);
+            // Überwachung: Bereich aufziehen statt verschieben
+            if (wache.waehlt) {
+                wache.zeiger('down', ...punkt(e));
+                return;
+            }
+            zug = { x: e.clientX, y: e.clientY, ox: this.ox, oy: this.oy };
             this.buehne.classList.add('ziehen');
         });
         this.buehne.addEventListener('pointermove', (e) => {
+            if (wache.waehlt) {
+                wache.zeiger('move', ...punkt(e));
+                return;
+            }
             if (!zug) return;
             this.ox = zug.ox + e.clientX - zug.x;
             this.oy = zug.oy + e.clientY - zug.y;
             this.anwenden();
         });
-        const loslassen = () => { zug = null; this.buehne.classList.remove('ziehen'); };
+        const loslassen = (e) => {
+            if (wache.waehlt) wache.zeiger('up', ...punkt(e));
+            zug = null;
+            this.buehne.classList.remove('ziehen');
+        };
         this.buehne.addEventListener('pointerup', loslassen);
         this.buehne.addEventListener('pointercancel', loslassen);
-        this.buehne.addEventListener('dblclick', () => this.zuruecksetzen());
+        this.buehne.addEventListener('dblclick', () => { if (!wache.waehlt) this.zuruecksetzen(); });
 
         $('#zoom-weg').addEventListener('click', () => this.zuruecksetzen());
         $('#zoom-1zu1').addEventListener('click', () => this.einsZuEins());
@@ -150,6 +168,21 @@ const ansicht = {
         this.video.style.transform = `scale(${this.spiegelnH ? -1 : 1}, ${this.spiegelnV ? -1 : 1})`;
         $('#zoom-anzeige').textContent = `${Math.round(this.zoom * 100)} %`;
         this.overlayZeichnen();
+        peaking.zeichnen();
+    },
+
+    // Bühnenpixel -> Bildanteil (0…1) im ungespiegelten Kamerabild, und zurück
+    buehneZuBild(px, py) {
+        let x = (px - this.ox) / (this.fit.w * this.zoom);
+        let y = (py - this.oy) / (this.fit.h * this.zoom);
+        if (this.spiegelnH) x = 1 - x;
+        if (this.spiegelnV) y = 1 - y;
+        return { x, y };
+    },
+    bildZuBuehne(x, y) {
+        if (this.spiegelnH) x = 1 - x;
+        if (this.spiegelnV) y = 1 - y;
+        return { x: this.ox + x * this.fit.w * this.zoom, y: this.oy + y * this.fit.h * this.zoom };
     },
 
     umschalten(was) {
@@ -181,8 +214,9 @@ const ansicht = {
         const dpr = devicePixelRatio || 1;
         x.setTransform(1, 0, 0, 1, 0, 0);
         x.clearRect(0, 0, c.width, c.height);
-        if (!this.fadenkreuz && !this.raster) return;
         x.setTransform(dpr, 0, 0, dpr, 0, 0);
+        wache.zeichnen(x);
+        if (!this.fadenkreuz && !this.raster) return;
         const W = c.width / dpr, H = c.height / dpr;
         // Sichtbarer Teil des Bildes
         const l = Math.max(0, this.ox), o = Math.max(0, this.oy);

@@ -1,7 +1,7 @@
 Yizhan 4K Kamera
 ================
 
-Starten: Yizhan-4K-Kamera-V1.0.0.exe doppelklicken (keine Installation nötig).
+Starten: Yizhan-4K-Kamera-V1.1.0.exe doppelklicken (keine Installation nötig).
 Die Kamera per USB anstecken – das Programm nimmt sie von selbst
 (sie meldet sich unter Windows als „4K Camera“).
 
@@ -17,7 +17,25 @@ Tastenkürzel
   Mausrad, + / −  Zoom (Ziehen verschiebt den Ausschnitt)
   0 / Doppelklick ganzes Bild
   1               ein Kamerapixel je Bildschirmpixel
+  B               Rückblick speichern (die letzten 30–300 s)
+  P / Z           Fokus-Peaking / Zebra
   Strg+Q          Beenden
+
+In der Vorschau eines Videos
+  Leertaste       abspielen / anhalten
+  ← / →           ein Bild zurück / vor
+  Bild ↑ / ↓      vorige / nächste Datei
+  I / O           Anfang / Ende für den Schnitt setzen
+  Pos1            zum Anfang
+
+Rückblick: Ist er eingeschaltet (Reiter „Aufnahme“), hält das Programm die
+letzten Sekunden im Speicher. „Speichern“ macht daraus ein Video – auch von
+dem, was schon passiert ist.
+
+Überwachung (Reiter „Überwachung“): Bereich im Bild aufziehen, Empfindlichkeit
+so stellen, dass der Balken in Ruhe links vom roten Strich bleibt. Bei Bewegung
+ein Foto, ein Video (mit Vorlauf aus dem Rückblick) oder nur eine Meldung.
+Stillstand-Alarm: meldet sich, wenn sich so viele Minuten nichts bewegt hat.
 
 Was die Kamera wirklich kann (am 07.10.2026 ausgelesen)
   Auflösung bis 3840 × 2160 bei 30 Bildern pro Sekunde (auch 2560 × 1440,

@@ -1,6 +1,7 @@
 // Start: Teile verbinden, Tabs, Menü, Tastenkürzel, Hell/Dunkel
 function seiteZeigen(name) {
     if (galerie.istOffen()) galerie.schliessen();
+    if (wache.waehlt) wache.auswaehlen(false);
     $$('.tab').forEach((t) => t.classList.toggle('aktiv', t.dataset.seite === name));
     $$('.seite').forEach((s) => s.classList.toggle('aktiv', s.id === 'seite-' + name));
     if (name === 'galerie') galerie.laden();
@@ -33,7 +34,12 @@ const KUERZEL = [
     ['+ / − / Mausrad', 'Zoom'],
     ['0 / Doppelklick', 'Ganzes Bild'],
     ['1', 'Ein Kamerapixel je Bildschirmpixel'],
-    ['← / →', 'Blättern in der Vorschau'],
+    ['B', 'Rückblick speichern'],
+    ['P / Z', 'Fokus-Peaking / Zebra'],
+    ['← / →', 'Vorschau: blättern; bei Videos ein Bild vor/zurück'],
+    ['Bild ↑ / Bild ↓', 'Vorschau: blättern (auch bei Videos)'],
+    ['Leertaste', 'Video in der Vorschau abspielen / anhalten'],
+    ['I / O', 'Schnitt: Anfang / Ende setzen'],
     ['Strg+Q', 'Beenden'],
 ];
 
@@ -42,6 +48,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     bildrateZaehlen();
     aufnahme.init();
     galerie.init();
+    puffer.init();
+    wache.init();
+    peaking.init();
+    abspieler.init();
+
+    // Reiter der Seitenleiste
+    const leisteZeigen = (name) => {
+        $$('.leiste-tab').forEach((t) => t.classList.toggle('aktiv', t.dataset.leiste === name));
+        $$('.leiste').forEach((l) => { l.hidden = l.dataset.leiste !== name; });
+        speicher.schreiben('leiste', name);
+        ansicht.overlayZeichnen();
+    };
+    $$('.leiste-tab').forEach((t) => t.addEventListener('click', () => leisteZeigen(t.dataset.leiste)));
+    leisteZeigen(speicher.lesen('leiste', 'aufnahme'));
 
     $$('.tab').forEach((t) => t.addEventListener('click', () => seiteZeigen(t.dataset.seite)));
     $('#thema-knopf').addEventListener('click', () => themaSetzen(document.documentElement.dataset.thema === 'hell' ? 'dunkel' : 'hell'));
@@ -97,10 +117,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         if (galerie.istOffen()) {
-            if (e.key === 'Escape') galerie.schliessen();
-            if (e.key === 'ArrowLeft') galerie.blaettern(-1);
-            if (e.key === 'ArrowRight') galerie.blaettern(1);
-            if (e.key === 'Delete') galerie.loeschen();
+            const video = !!abspieler.video;
+            const taste = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+            const vorschau = {
+                Escape: () => galerie.schliessen(),
+                Delete: () => galerie.loeschen(),
+                PageUp: () => galerie.blaettern(-1),
+                PageDown: () => galerie.blaettern(1),
+                ArrowLeft: () => (video && !e.shiftKey ? abspieler.schritt(-1) : galerie.blaettern(-1)),
+                ArrowRight: () => (video && !e.shiftKey ? abspieler.schritt(1) : galerie.blaettern(1)),
+                ...(video ? {
+                    ' ': () => abspieler.spielen(),
+                    Home: () => abspieler.springen(0),
+                    i: () => abspieler.marke('rein'),
+                    o: () => abspieler.marke('raus'),
+                } : {}),
+            };
+            if (vorschau[taste]) {
+                e.preventDefault();
+                document.activeElement?.blur();
+                vorschau[taste]();
+            }
             return;
         }
         const live = $('#seite-live').classList.contains('aktiv');
@@ -119,6 +156,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             '-': () => ansicht.zoomUm(ansicht.zoom / 1.25),
             0: () => ansicht.zuruecksetzen(),
             1: () => ansicht.einsZuEins(),
+            b: () => puffer.speichern(),
+            p: () => peaking.umschalten('peaking'),
+            z: () => peaking.umschalten('zebra'),
         };
         if (!live || !aktionen[taste]) return;
         e.preventDefault();

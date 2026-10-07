@@ -122,15 +122,16 @@ const galerie = {
         let el;
         if (d.art === 'video') {
             el = document.createElement('video');
-            el.controls = true;
-            el.autoplay = true;
+            el.crossOrigin = 'anonymous';
             el.muted = true;
+            el.preload = 'auto';
         } else {
             el = document.createElement('img');
             el.onload = () => { $('#vorschau-info').textContent = `${el.naturalWidth}×${el.naturalHeight} · ${this.zeitText(d.zeit)} · ${bytesText(d.groesse)}`; };
         }
         el.src = medienUrl(d.name) + `?t=${Math.round(d.zeit)}`;
         inhalt.replaceChildren(el);
+        abspieler.binden(d.art === 'video' ? el : null, d);
         $('#vorschau').classList.add('offen');
     },
 
@@ -139,6 +140,7 @@ const galerie = {
     },
 
     schliessen() {
+        abspieler.binden(null);
         $('#vorschau-inhalt').querySelector('video')?.pause();
         $('#vorschau-inhalt').replaceChildren();
         $('#vorschau').classList.remove('offen');
@@ -153,6 +155,7 @@ const galerie = {
         const d = this.aktuell();
         if (!d) return;
         // Video vorher loslassen, sonst hält Windows die Datei fest
+        abspieler.binden(null);
         $('#vorschau-inhalt').querySelector('video')?.removeAttribute('src');
         $('#vorschau-inhalt').replaceChildren();
         try {

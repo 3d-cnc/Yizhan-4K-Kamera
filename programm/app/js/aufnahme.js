@@ -26,6 +26,7 @@ const aufnahme = {
         kam.beiBeendenUndSchliessen(async () => {
             this.intervallStoppen();
             await this.stoppen();
+            if (wache.ereignis) await wache.ereignisBeenden();
             kam.fertigZumSchliessen();
         });
         setInterval(() => this.anzeigen(), 500);
@@ -127,6 +128,7 @@ const aufnahme = {
 
     kameraWeg() {
         this.intervallStoppen();
+        puffer.stoppen(true);
         if (this.laeuft()) this.stoppen();
     },
 

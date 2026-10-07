@@ -33,7 +33,7 @@ if (pruefen) {
 
 // Galerie-Dateien als medien://datei/<name>; standard + stream, damit Videos spulen koennen
 protocol.registerSchemesAsPrivileged([
-    { scheme: 'medien', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } },
+    { scheme: 'medien', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, corsEnabled: true } },
 ]);
 
 let fenster = null;
@@ -247,6 +247,15 @@ ipcMain.handle('video-anhaengen', (_e, id, daten) => {
     v.bytes += puffer.length;
     return v.bytes;
 });
+// MP4 aus mediabunny: Stücke an bestimmte Stellen schreiben (Kopf wird am Ende nachgetragen)
+ipcMain.handle('video-schreiben-an', (_e, id, daten, stelle) => {
+    const v = videos.get(id);
+    if (!v || !Number.isSafeInteger(stelle) || stelle < 0) return false;
+    const puffer = Buffer.from(daten);
+    fs.writeSync(v.fd, puffer, 0, puffer.length, stelle);
+    v.bytes = Math.max(v.bytes, stelle + puffer.length);
+    return v.bytes;
+});
 ipcMain.handle('video-schliessen', (_e, id) => {
     const v = videos.get(id);
     if (!v) return null;
@@ -325,10 +334,20 @@ async function vorschauAntwort(pfad) {
         if (vorschauen.size > 2000) vorschauen.clear();
         vorschauen.set(schluessel, jpg);
     }
-    return new Response(jpg, { status: 200, headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'no-cache' } });
+    return new Response(jpg, { status: 200, headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'no-cache', ...CORS } });
 }
 
+// Die Seite kommt von file://, die Medien von medien:// – ohne diese Kopfzeilen dürfte sie die Videos
+// nicht lesen (Abspieler, Schneiden) und Bilder daraus nicht speichern (Leinwand gilt sonst als fremd)
+const CORS = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': '*',
+    'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+    'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Accept-Ranges, Content-Type',
+};
+
 function medienAntwort(anfrage) {
+    if (anfrage.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
     let pfad, url;
     try {
         url = new URL(anfrage.url);
@@ -344,7 +363,8 @@ function medienAntwort(anfrage) {
         return new Response('nicht gefunden', { status: 404 });
     }
     const typ = TYPEN[path.extname(pfad).toLowerCase()] ?? 'application/octet-stream';
-    const kopf = { 'Content-Type': typ, 'Accept-Ranges': 'bytes', 'Cache-Control': 'no-cache' };
+    const kopf = { 'Content-Type': typ, 'Accept-Ranges': 'bytes', 'Cache-Control': 'no-cache', ...CORS };
+    if (anfrage.method === 'HEAD') return new Response(null, { status: 200, headers: { ...kopf, 'Content-Length': String(groesse) } });
     const bereich = /^bytes=(\d*)-(\d*)$/.exec(anfrage.headers.get('range') ?? '');
     if (bereich && groesse > 0) {
         let start = bereich[1] === '' ? groesse - Number(bereich[2]) : Number(bereich[1]);
@@ -398,6 +418,22 @@ async function selbsttest() {
     fs.writeFileSync(logDatei, '');
     const log = (text) => { console.log(text); fs.appendFileSync(logDatei, text + '\n'); };
     const pruefe = (bedingung, text) => { if (!bedingung) fehler.push(text); log(`${bedingung ? 'ok  ' : 'FEHL'} ${text}`); };
+    // Dauer, Breite, Höhe eines Videos aus dem Speicherordner (MediaRecorder-WebM: erst ans Ende spulen)
+    const videoMasse = (name) => js(`new Promise((ok) => { const v = document.createElement('video'); v.muted = true; v.preload = 'metadata';
+        v.onloadedmetadata = () => { if (v.duration === Infinity) { v.currentTime = 1e9; v.ontimeupdate = () => { v.ontimeupdate = null; ok([v.duration, v.videoWidth, v.videoHeight]); }; } else ok([v.duration, v.videoWidth, v.videoHeight]); };
+        v.onerror = () => ok(null); v.src = 'medien://datei/' + encodeURIComponent(${JSON.stringify(name)}); setTimeout(() => ok(null), 8000); })`);
+    const masseText = (m) => m?.map((x) => Math.round(x * 10) / 10).join(', ');
+    const fotoMasse = (name) => js(`new Promise((ok) => { const i = new Image(); i.onload = () => ok([i.naturalWidth, i.naturalHeight]); i.onerror = () => ok(null); i.src = 'medien://datei/' + encodeURIComponent(${JSON.stringify(name)}); })`);
+    // Auf eine neue Datei warten, deren Name passt
+    const neueDatei = async (vorher, muster, sekunden = 15) => {
+        for (let i = 0; i < sekunden * 5; i++) {
+            const d = (await js('kam.dateien()')).find((x) => !vorher.includes(x.name) && muster.test(x.name));
+            if (d) return d;
+            await warte(200);
+        }
+        return null;
+    };
+    const namen = async () => (await js('kam.dateien()')).map((d) => d.name);
     const foto = async (zusatz) => {
         await warte(400);
         const bild = await wc.capturePage();
@@ -452,10 +488,8 @@ async function selbsttest() {
         for (let i = 0; i < 30 && !video; i++) { await warte(200); video = (await js('kam.dateien()')).find((d) => d.art === 'video'); }
         pruefe(video && video.groesse > 1000, `Video gespeichert (${video?.name}, ${video?.groesse} Bytes)`);
         if (video) {
-            const dauer = await js(`new Promise((ok) => { const v = document.createElement('video'); v.muted = true; v.preload = 'metadata';
-                v.onloadedmetadata = () => { if (v.duration === Infinity) { v.currentTime = 1e9; v.ontimeupdate = () => { v.ontimeupdate = null; ok([v.duration, v.videoWidth, v.videoHeight]); }; } else ok([v.duration, v.videoWidth, v.videoHeight]); };
-                v.onerror = () => ok(null); v.src = 'medien://datei/' + encodeURIComponent(${JSON.stringify(video.name)}); setTimeout(() => ok(null), 8000); })`);
-            pruefe(dauer && dauer[0] > 2 && dauer[0] < 6, `Video abspielbar (${dauer?.map((x) => Math.round(x * 10) / 10).join(', ')})`);
+            const dauer = await videoMasse(video.name);
+            pruefe(dauer && dauer[0] > 2 && dauer[0] < 6, `Video abspielbar (${masseText(dauer)})`);
         }
         await js('pruefKlick("#spiegeln-h"); pruefKlick("#fadenkreuz");');
 
@@ -472,19 +506,122 @@ async function selbsttest() {
         pruefe(await js('ansicht.standbild'), 'Standbild an');
         await js('pruefKlick("#standbild")');
 
+        // Seitenleiste: jeder Reiter passt ohne Scrollen
+        for (const reiter of ['aufnahme', 'bild', 'wache']) {
+            await js(`pruefKlick(".leiste-tab[data-leiste=${reiter}]")`);
+            await warte(150);
+            const zuViel = await js('document.querySelector("#seitenleiste").scrollHeight - document.querySelector("#seitenleiste").clientHeight');
+            pruefe(zuViel <= 0, `Reiter ${reiter} passt ohne Scrollen (${zuViel} zu viel)`);
+            await foto(`leiste-${reiter}`);
+        }
+
+        // YZ-16 Peaking und Zebra
+        await js('pruefKlick("#peaking-knopf"); pruefKlick("#zebra-knopf");');
+        await warte(600);
+        const markiert = await js('peaking.markiert()');
+        pruefe(demo ? markiert > 1000 : markiert >= 0, `Peaking/Zebra zeichnet (${markiert} Punkte markiert)`);
+        await js('ansicht.zoomen(3, 0.5, 0.5)');
+        await foto('peaking');
+        await js('ansicht.zuruecksetzen(); pruefKlick("#peaking-knopf"); pruefKlick("#zebra-knopf");');
+        await warte(200);
+        pruefe(await js('document.querySelector("#peaking").hidden'), 'Peaking/Zebra wieder aus');
+
+        // YZ-14 Rückblick
+        await js('pruefKlick(".leiste-tab[data-leiste=aufnahme]"); document.querySelector("#puffer-laenge").value = "30"; pruefKlick("#puffer-an");');
+        await warte(5000);
+        const pz = await js('({ laeuft: puffer.laeuft, sek: puffer.sekunden(), bytes: puffer.bytes, stuecke: puffer.stuecke.length })');
+        pruefe(pz.laeuft && pz.sek > 3.5, `Rückblick füllt sich (${pz.sek.toFixed(1)} s, ${pz.stuecke} Stücke, ${pz.bytes} Bytes)`);
+        let vor = await namen();
+        await js('pruefKlick("#puffer-speichern")');
+        const rueck = await neueDatei(vor, /^Rueckblick_.*\.mp4$/);
+        const rueckMasse = rueck && await videoMasse(rueck.name);
+        pruefe(rueckMasse && rueckMasse[0] > 3 && rueckMasse[0] < 7 && rueckMasse[1] === lauf.breite, `Rückblick gespeichert und abspielbar (${rueck?.name}: ${masseText(rueckMasse)})`);
+        await js('pruefKlick("#puffer-an")');
+        await warte(300);
+        pruefe(!(await js('puffer.laeuft')), 'Rückblick wieder aus');
+
+        // YZ-15 Überwachung
+        await js(`pruefKlick(".leiste-tab[data-leiste=wache]");
+            document.querySelector("#wache-aktion").value = "foto"; document.querySelector("#wache-ruhe").value = "1";
+            document.querySelector("#wache-empfindlich").value = "100"; document.querySelector("#wache-ton").checked = false;
+            wache.bereich = { x: 0.25, y: 0.2, w: 0.5, h: 0.6 }; ansicht.overlayZeichnen(); pruefKlick("#wache-start");`);
+        vor = await namen();
+        await warte(3500);
+        const wz = await js('({ aktiv: wache.aktiv, anteil: wache.anteil, anzahl: wache.anzahl })');
+        await foto('wache');
+        const wFotos = (await js('kam.dateien()')).filter((d) => !vor.includes(d.name) && /^Foto_/.test(d.name)).length;
+        pruefe(wz.aktiv && (demo ? wz.anzahl > 0 && wFotos > 0 : true), `Überwachung Foto (Bewegung ${(wz.anteil * 100).toFixed(2)} %, ${wz.anzahl} Ereignisse, ${wFotos} Fotos)`);
+        await js('pruefKlick("#wache-start")');
+        await warte(300);
+        if (demo) {
+            // Video mit Vorlauf: Ereignis läuft, beim Beenden der Überwachung wird es gespeichert
+            await js('document.querySelector("#wache-aktion").value = "video"; document.querySelector("#wache-vorlauf").value = "2"; document.querySelector("#wache-ruhe").value = "30"; pruefKlick("#wache-start");');
+            await warte(4500);
+            const offen = await js('!!wache.ereignis && puffer.laeuft');
+            pruefe(offen, 'Überwachung Video: Ereignis offen, Rückblick läuft mit');
+            vor = await namen();
+            await js('pruefKlick("#wache-start")');
+            const bew = await neueDatei(vor, /^Bewegung_.*\.mp4$/);
+            const bewMasse = bew && await videoMasse(bew.name);
+            pruefe(bewMasse && bewMasse[0] > 2.5, `Überwachung Video gespeichert (${bew?.name}: ${masseText(bewMasse)})`);
+            pruefe(!(await js('puffer.laeuft')), 'Rückblick nach der Überwachung wieder aus');
+        }
+        await js('wache.bereich = null; pruefKlick(".leiste-tab[data-leiste=aufnahme]");');
+
         // Galerie
+        const anzahl = (await js('kam.dateien()')).length;
         await js('pruefKlick(".tab[data-seite=galerie]")');
         await warte(800);
         const kacheln = await js('document.querySelectorAll("#galerie-raster .kachel").length');
-        pruefe(kacheln === nachInterval, `Galerie zeigt alle Dateien (${kacheln})`);
+        pruefe(kacheln === anzahl, `Galerie zeigt alle Dateien (${kacheln} von ${anzahl})`);
         await foto('galerie');
-        await js('pruefKlick("#galerie-raster .kachel.video")');
-        await warte(1000);
+
+        // YZ-18 Video genauer ansehen: das Rückblick-Video öffnen
+        await js(`galerie.oeffnen(galerie.sichtbar().findIndex((d) => d.name === ${JSON.stringify(rueck?.name ?? '')}))`);
+        await warte(1500);
+        const ab0 = await js('({ fps: abspieler.fps, dauer: abspieler.dauer, bilder: abspieler.zeiten?.length ?? 0 })');
+        pruefe(ab0.dauer > 3 && ab0.fps > 10 && ab0.bilder > 50, `Abspieler kennt Dauer, Bildrate und Bildzeiten (${ab0.dauer.toFixed(2)} s, ${ab0.fps.toFixed(1)} B/s, ${ab0.bilder} Bilder)`);
+        await js('abspieler.springen(1)');
+        await warte(500);
+        const n1 = await js('abspieler.bildNummer()');
+        await js('abspieler.schritt(1)');
+        await js('abspieler.schritt(1)');
+        await warte(200);
+        const n2 = await js('abspieler.bildNummer()');
+        pruefe(n2 - n1 === 2, `Zwei Bilder vor (Bild ${n1} -> ${n2})`);
+        await js('abspieler.schritt(-1)');
+        await warte(200);
+        const n3 = await js('abspieler.bildNummer()');
+        pruefe(n2 - n3 === 1, `Ein Bild zurück (Bild ${n3})`);
+        vor = await namen();
+        await js('pruefKlick("#ab-bild-speichern")');
+        const einzel = await neueDatei(vor, /_Bild_.*\.jpg$/);
+        const einzelMasse = einzel && await fotoMasse(einzel.name);
+        pruefe(einzelMasse && einzelMasse[0] === lauf.breite, `Einzelbild gespeichert (${einzel?.name}, ${einzelMasse?.join('×')})`);
+        await js('abspieler.springen(0.5)');
+        await warte(400);
+        await js('pruefKlick("#ab-in"); abspieler.springen(2.5);');
+        await warte(400);
+        await js('pruefKlick("#ab-out")');
+        await warte(200);
+        await foto('abspieler');
+        vor = await namen();
+        await js('pruefKlick("#ab-schneiden")');
+        const schnitt = await neueDatei(vor, /_Schnitt\.mp4$/, 30);
+        await warte(500);
+        const schnittMasse = schnitt && await videoMasse(schnitt.name);
+        pruefe(schnittMasse && Math.abs(schnittMasse[0] - 2) < 0.4, `Schnitt gespeichert (${schnitt?.name}: ${masseText(schnittMasse)}, soll 2 s)`);
+        await js('galerie.schliessen()');
+
+        // Löschen aus der Vorschau
+        const vorLoeschen = (await js('kam.dateien()')).length;
+        await js('galerie.oeffnen(0)');
+        await warte(800);
         await foto('vorschau');
         await js('pruefKlick("#vorschau-loeschen")');
         await warte(600);
-        pruefe((await js('kam.dateien()')).length === nachInterval - 1, 'Löschen aus der Vorschau');
-        await js('pruefKlick(".tab[data-seite=live]")');
+        pruefe((await js('kam.dateien()')).length === vorLoeschen - 1, 'Löschen aus der Vorschau');
+        await js('galerie.schliessen(); pruefKlick(".tab[data-seite=live]")');
 
         // Hell
         await js('pruefKlick("#thema-knopf")');

@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('kam', {
     fotoSpeichern: (name, daten) => ipcRenderer.invoke('foto-speichern', name, daten),
     videoBeginnen: (name) => ipcRenderer.invoke('video-beginnen', name),
     videoAnhaengen: (id, daten) => ipcRenderer.invoke('video-anhaengen', id, daten),
+    videoSchreibenAn: (id, daten, stelle) => ipcRenderer.invoke('video-schreiben-an', id, daten, stelle),
     videoSchliessen: (id) => ipcRenderer.invoke('video-schliessen', id),
     beiBeendenUndSchliessen: (rueckruf) => ipcRenderer.on('aufnahme-beenden-und-schliessen', () => rueckruf()),
     fertigZumSchliessen: () => ipcRenderer.send('fertig-zum-schliessen'),

@@ -187,3 +187,57 @@ body.vollbild .buehne-panel { border: 0; border-radius: 0; }
 .toast { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--ok); border-radius: 8px; padding: 9px 14px; box-shadow: 0 8px 24px rgba(0,0,0,.3); font-size: 13px; animation: rein .2s ease-out; }
 .toast.fehler { border-left-color: var(--err); }
 @keyframes rein { from { transform: translateY(8px); opacity: 0; } }
+
+/* ---------- Seitenleiste in Reitern ---------- */
+.leiste-tabs { flex: none; }
+.leiste-tab { flex: 1; background: transparent; border: 0; border-radius: 6px; padding: 5px 8px; color: var(--muted); font-weight: 600; position: relative; }
+.leiste-tab:hover { background: var(--knopf); color: var(--text); }
+.leiste-tab.aktiv { background: var(--knopf-hover); color: var(--text); }
+.punkt-klein { display: none; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); margin-left: 6px; vertical-align: middle; box-shadow: 0 0 6px var(--ok); }
+.punkt-klein.an { display: inline-block; }
+.leiste { display: flex; flex-direction: column; gap: 12px; }
+.leiste[hidden] { display: none; }
+.histogramm-panel { margin-top: auto; flex: none; }
+.leiste-status { margin-top: 8px; font-size: 12px; color: var(--muted); font-family: var(--mono); min-height: 18px; }
+button.breit { width: 100%; margin-top: 12px; padding: 9px; }
+
+/* Schalter */
+.schalter { position: relative; display: inline-block; width: 36px; height: 20px; cursor: pointer; }
+.schalter input { opacity: 0; width: 0; height: 0; position: absolute; }
+.schalter span { position: absolute; inset: 0; background: var(--knopf); border: 1px solid var(--line); border-radius: 99px; transition: background .15s; }
+.schalter span::after { content: ""; position: absolute; left: 2px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--muted); transition: transform .15s, background .15s; }
+.schalter input:checked + span { background: color-mix(in srgb, var(--akzent) 35%, var(--knopf)); border-color: var(--akzent); }
+.schalter input:checked + span::after { transform: translateX(16px); background: var(--akzent); }
+
+.puffer-zeile { display: flex; gap: 10px; align-items: center; }
+.puffer-zeile button { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+.anzeige-raster { display: grid; grid-template-columns: 112px minmax(0, 1fr) 44px; gap: 10px 8px; align-items: center; font-size: 13px; }
+.anzeige-raster input[type=color] { width: 44px; }
+
+.wache-bereich { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.wache-bereich button.an { outline: 2px solid var(--warn); outline-offset: -2px; }
+.bewegung { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 8px; align-items: center; margin-top: 12px; font-size: 13px; }
+.bewegung .balken, .schaerfe .balken { position: relative; height: 10px; background: var(--panel2); border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+#bewegung-balken { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--akzent); transition: width .15s; }
+#bewegung-balken.ueber { background: var(--warn); }
+#bewegung-schwelle { position: absolute; top: -1px; bottom: -1px; width: 2px; left: 50%; background: var(--err); }
+.wache-raster { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 9px 8px; align-items: center; margin-top: 12px; }
+.wache-raster label.klein { font-size: 13px; color: var(--text); }
+.wache-raster .einheit { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 12px; }
+.wache-raster input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--akzent); }
+#wache-start.laeuft { background: var(--warn); color: #241400; }
+.marke.wache { background: var(--warn); color: #241400; }
+#buehne.auswahl { cursor: crosshair; }
+
+#peaking { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+#peaking[hidden] { display: none; }
+
+/* ---------- Abspielleiste (Videos in der Vorschau) ---------- */
+#abspiel-leiste { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--line); }
+#abspiel-leiste[hidden] { display: none; }
+.zeitleiste { position: relative; flex: 1; min-width: 200px; display: flex; align-items: center; }
+.zeitleiste input { position: relative; z-index: 1; }
+#ab-schnitt { position: absolute; z-index: 2; pointer-events: none; top: 50%; height: 10px; margin-top: -5px; background: color-mix(in srgb, var(--warn) 40%, transparent); border-left: 2px solid var(--warn); border-right: 2px solid var(--warn); border-radius: 2px; display: none; }
+#ab-schnitt.sichtbar { display: block; }
+#ab-zeitanzeige { font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: nowrap; min-width: 250px; text-align: center; }
