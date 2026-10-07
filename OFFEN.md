@@ -1,6 +1,6 @@
 # Offen
 
-Vorschläge heißen YZ-1, YZ-2 … und werden nie neu vergeben. Nächste freie Nummer: **YZ-14**.
+Vorschläge heißen YZ-1, YZ-2 … und werden nie neu vergeben. Nächste freie Nummer: **YZ-24**.
 
 ## Zu klären
 
@@ -23,6 +23,16 @@ Vorschläge heißen YZ-1, YZ-2 … und werden nie neu vergeben. Nächste freie N
 - **YZ-11 Versionsprüfung:** Menü prüft auf eine neue Fassung wie beim OWON-Programm. Das Repo gibt es seit 07.10. (privat), solange es privat ist, meldet GitHub dafür aber 404.
 - **YZ-12 Ton:** Videos mit Ton von einem wählbaren Mikrofon (die Kamera hat keins).
 - **YZ-13 Bildvergleich vorher/nachher:** Zwei Fotos aus der Galerie nebeneinander oder mit Schieber vergleichen.
+- **YZ-14 Rückblick-Puffer:** Die letzten 30–120 s laufen ständig im Speicher mit; ein Knopf (oder Taste) speichert sie als Video. So bleibt auch fest, was schon passiert ist (Werkzeugbruch, Druck löst sich). Aufwand mittel.
+- **YZ-15 Überwachung mit Auslöser:** Bildänderung in einem markierten Bereich startet Foto oder Video, optional mit Ton und blinkender Taskleiste; dazu „nichts bewegt sich mehr seit X min“ als Alarm (Drucker oder Fräse steht). Aufwand mittel.
+- **YZ-16 Fokus-Peaking und Zebra:** Scharfe Kanten farbig markieren und überbelichtete Stellen schraffieren, nur in der Ansicht. Hilft beim Scharfstellen von Hand mehr als die Zahl allein. Aufwand klein.
+- **YZ-17 Lupe:** Kleines Fenster im Live-Bild zeigt die Stelle unter der Maus in 1:1 oder 2:1, während das ganze Bild eingepasst bleibt. Aufwand klein.
+- **YZ-18 Videos genauer ansehen:** In der Vorschau Bild für Bild vor und zurück, Zeitlupe, ein Einzelbild als Foto speichern, Anfang und Ende abschneiden. Aufwand mittel.
+- **YZ-19 Mosaik:** Mehrere überlappende Fotos zu einem großen Bild zusammensetzen (große Platine oder Werkstück unter starker Vergrößerung). Aufwand groß.
+- **YZ-20 CAD-Schablone:** DXF- oder SVG-Kontur maßstäblich ins Live-Bild legen, verschieben und drehen – Teil gegen die Zeichnung prüfen. Setzt YZ-2 (Maßstab) voraus. Aufwand mittel.
+- **YZ-21 Kanten- und Mittenfinder:** Die App findet Kante, Ecke oder Bohrungsmitte nahe am Fadenkreuz und zeigt den Versatz in mm – optisches Antasten. Setzt YZ-2 voraus. Aufwand mittel bis groß.
+- **YZ-22 LinuxCNC-Kopplung:** Maschinenposition ins Foto schreiben, gefundenen Versatz aus YZ-21 als Nullpunkt übergeben, für YZ-19 ein Raster abfahren und an jeder Stelle ein Foto machen. Verbindung übers Netz zur Maschine. Aufwand groß.
+- **YZ-23 Projekte und Bericht:** Aufnahmen einem Projekt zuordnen (eigener Unterordner, Name im Dateinamen), Notizen je Foto, ausgewählte Fotos als PDF-Bericht (wie der Messbericht im OWON-Programm). Aufwand mittel.
 
 ## Umgesetzt
 
