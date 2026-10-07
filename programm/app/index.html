@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' medien: data: blob:; media-src 'self' medien: blob: mediastream:">
+<title>Yizhan 4K Kamera</title>
+<script src="js/thema.js"></script>
+<link rel="stylesheet" href="stil.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-kamera" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13.5" r="3.6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-video" viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 10.5 21 7.5v9l-5-3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-spiegel-h" viewBox="0 0 24 24"><path d="M12 3v18" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 2"/><path d="M9 7 3 17h6z" fill="currentColor"/><path d="M15 7l6 10h-6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="i-spiegel-v" viewBox="0 0 24 24"><g transform="rotate(90 12 12)"><path d="M12 3v18" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 2"/><path d="M9 7 3 17h6z" fill="currentColor"/><path d="M15 7l6 10h-6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></g></symbol>
+  <symbol id="i-kreuz" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 2v6M12 16v6M2 12h6M16 12h6" stroke="currentColor" stroke-width="1.6"/></symbol>
+  <symbol id="i-raster" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18" stroke="currentColor" stroke-width="1.3"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></symbol>
+  <symbol id="i-vollbild" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-ordner" viewBox="0 0 24 24"><path d="M3 6a1 1 0 0 1 1-1h5l2 2h9a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-menue" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="19" r="1.8" fill="currentColor"/></symbol>
+  <symbol id="i-mond" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-sonne" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></symbol>
+</svg>
+
+<header>
+  <h1>Yizhan 4K Kamera</h1>
+  <nav class="tabs">
+    <button class="tab aktiv" data-seite="live">Live</button>
+    <button class="tab" data-seite="galerie">Galerie<span class="zaehler" id="galerie-zahl"></span></button>
+  </nav>
+  <div id="status"><span class="punkt"></span><span id="status-text">Kamera wird gesucht …</span></div>
+  <div class="rechts">
+    <label class="klein">Kamera <select id="kamera-wahl"></select></label>
+    <label class="klein">Auflösung <select id="aufloesung"></select></label>
+    <button id="thema-knopf" title="Hell / Dunkel"><svg class="mond" width="18" height="18"><use href="#i-mond"/></svg><svg class="sonne" width="18" height="18"><use href="#i-sonne"/></svg></button>
+    <div class="menue-halter">
+      <button id="menue-knopf" title="Menü"><svg width="18" height="18"><use href="#i-menue"/></svg></button>
+      <div id="menue" class="menue">
+        <button data-aktion="ordner-oeffnen">Speicherordner öffnen</button>
+        <button data-aktion="ordner-waehlen">Speicherordner ändern …</button>
+        <hr>
+        <button data-aktion="kuerzel">Tastenkürzel</button>
+        <button data-aktion="ueber">Über das Programm</button>
+        <hr>
+        <button data-aktion="beenden">Beenden <span class="kbd">Strg+Q</span></button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div id="meldung"></div>
+
+<main>
+  <!-- ======================================================= Live -->
+  <section class="seite aktiv" id="seite-live">
+    <div class="panel buehne-panel">
+      <div id="buehne">
+        <div id="bildrahmen"><video id="live" muted playsinline></video></div>
+        <canvas id="overlay"></canvas>
+        <div id="blitz"></div>
+        <div id="buehne-info">
+          <span id="zoom-anzeige">100 %</span>
+          <span id="standbild-marke" class="marke">Standbild</span>
+          <span id="rec-marke" class="marke rec"><span class="rec-punkt"></span><span id="rec-zeit">00:00</span></span>
+          <span id="intervall-marke" class="marke"></span>
+        </div>
+        <div id="kein-bild"></div>
+      </div>
+      <div class="werkzeuge">
+        <div class="gruppe">
+          <button id="zoom-weg" title="Ganzes Bild (0)">Einpassen</button>
+          <button id="zoom-1zu1" title="Ein Kamerapixel je Bildschirmpixel (1)">1:1</button>
+          <button id="zoom-plus" title="Vergrößern (+)">+</button>
+          <button id="zoom-minus" title="Verkleinern (−)">−</button>
+        </div>
+        <div class="gruppe">
+          <button id="spiegeln-h" class="symbol" title="Waagrecht spiegeln (H)"><svg width="20" height="20"><use href="#i-spiegel-h"/></svg></button>
+          <button id="spiegeln-v" class="symbol" title="Senkrecht spiegeln (V)"><svg width="20" height="20"><use href="#i-spiegel-v"/></svg></button>
+          <button id="fadenkreuz" class="symbol" title="Fadenkreuz (K)"><svg width="20" height="20"><use href="#i-kreuz"/></svg></button>
+          <button id="raster" class="symbol" title="Raster (G)"><svg width="20" height="20"><use href="#i-raster"/></svg></button>
+          <select id="raster-teilung" title="Rasterteilung">
+            <option value="3">3 × 3</option>
+            <option value="4">4 × 4</option>
+            <option value="8">8 × 8</option>
+            <option value="16">16 × 16</option>
+          </select>
+          <input type="color" id="overlay-farbe" value="#4fc3f7" title="Farbe von Fadenkreuz und Raster">
+        </div>
+        <div class="gruppe">
+          <button id="standbild" class="symbol" title="Standbild (S)"><svg width="20" height="20"><use href="#i-pause"/></svg></button>
+          <button id="vollbild" class="symbol" title="Vollbild (F)"><svg width="20" height="20"><use href="#i-vollbild"/></svg></button>
+        </div>
+        <div id="filmstreifen"></div>
+      </div>
+    </div>
+
+    <aside id="seitenleiste">
+      <div class="panel">
+        <h2>Aufnahme</h2>
+        <div class="ausloeser">
+          <button id="foto" class="gross haupt" title="Foto (Leertaste)"><svg width="22" height="22"><use href="#i-kamera"/></svg>Foto</button>
+          <button id="aufnahme" class="gross rec-knopf" title="Video starten / stoppen (R)"><svg width="22" height="22"><use href="#i-video"/></svg><span id="aufnahme-text">Video</span></button>
+        </div>
+        <div class="formate">
+          <label class="klein">Foto
+            <select id="foto-format">
+              <option value="jpg">JPG</option>
+              <option value="png">PNG</option>
+            </select>
+          </label>
+          <label class="klein">Video
+            <select id="video-format">
+              <option value="mp4">MP4 (H.264)</option>
+              <option value="webm">WebM (VP9)</option>
+            </select>
+          </label>
+          <label class="klein">Qualität
+            <select id="video-rate">
+              <option value="10">10 Mbit/s</option>
+              <option value="25" selected>25 Mbit/s</option>
+              <option value="50">50 Mbit/s</option>
+            </select>
+          </label>
+        </div>
+        <div class="ordnerzeile">
+          <button id="ordner-knopf" class="symbol" title="Speicherordner öffnen"><svg width="18" height="18"><use href="#i-ordner"/></svg></button>
+          <span id="ordner-name" title=""></span>
+          <span id="platz"></span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Intervallfotos</h2>
+        <div class="intervall">
+          <label class="klein">alle <input type="number" id="intervall-sek" min="1" max="86400" value="10"> s</label>
+          <label class="klein"><input type="number" id="intervall-anzahl" min="1" max="100000" value="60"> Bilder</label>
+          <button id="intervall-start">Starten</button>
+        </div>
+        <div class="fortschritt"><div id="intervall-balken"></div></div>
+      </div>
+
+      <div class="panel regler-panel">
+        <h2>Bild<span class="rechts"><button id="regler-standard" class="klein-knopf">Standard</button></span></h2>
+        <div id="regler"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Histogramm<span class="rechts"><span id="clip-anzeige"></span></span></h2>
+        <canvas id="histogramm"></canvas>
+        <div class="schaerfe">
+          <span class="name" title="Kontrast der feinen Details in der Bildmitte – zum Scharfstellen auf den Höchstwert drehen">Schärfe Bildmitte</span>
+          <div class="balken"><div id="schaerfe-balken"></div><div id="schaerfe-best"></div></div>
+          <span id="schaerfe-wert">–</span>
+          <button id="schaerfe-reset" class="klein-knopf" title="Bestwert vergessen">↺</button>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <!-- ======================================================= Galerie -->
+  <section class="seite" id="seite-galerie">
+    <div class="galerie-leiste">
+      <div class="tabs klein">
+        <button class="filter aktiv" data-filter="alle">Alle</button>
+        <button class="filter" data-filter="foto">Fotos</button>
+        <button class="filter" data-filter="video">Videos</button>
+      </div>
+      <span id="galerie-summe"></span>
+      <div class="rechts">
+        <button id="galerie-ordner"><svg width="16" height="16"><use href="#i-ordner"/></svg> Ordner öffnen</button>
+      </div>
+    </div>
+    <div id="galerie-raster"></div>
+    <div id="galerie-leer">Noch keine Fotos oder Videos in diesem Ordner.</div>
+  </section>
+</main>
+
+<!-- Vorschau einer Datei -->
+<div id="vorschau" class="dialog-huelle">
+  <div class="vorschau-kasten">
+    <div class="vorschau-kopf">
+      <span id="vorschau-name"></span>
+      <span id="vorschau-info"></span>
+      <div class="rechts">
+        <button id="vorschau-zurueck" title="Vorherige (←)">‹</button>
+        <button id="vorschau-weiter" title="Nächste (→)">›</button>
+        <button id="vorschau-oeffnen">Öffnen</button>
+        <button id="vorschau-zeigen">Im Ordner zeigen</button>
+        <button id="vorschau-kopieren">Kopieren</button>
+        <button id="vorschau-loeschen" class="gefahr">Löschen</button>
+        <button id="vorschau-zu" title="Schließen (Esc)">✕</button>
+      </div>
+    </div>
+    <div id="vorschau-inhalt"></div>
+  </div>
+</div>
+
+<!-- Kleiner Dialog für Tastenkürzel, Über -->
+<div id="hinweis-dialog" class="dialog-huelle">
+  <div class="hinweis-kasten">
+    <h3 id="hinweis-titel"></h3>
+    <div id="hinweis-text"></div>
+    <div class="zeile rechtsbuendig"><button id="hinweis-ok" class="haupt">OK</button></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script src="js/gemeinsam.js"></script>
+<script src="js/kamera.js"></script>
+<script src="js/ansicht.js"></script>
+<script src="js/aufnahme.js"></script>
+<script src="js/galerie.js"></script>
+<script src="js/start.js"></script>
+</body>
+</html>

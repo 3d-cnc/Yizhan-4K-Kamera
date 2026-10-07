@@ -1,0 +1,28 @@
+Yizhan 4K Kamera
+================
+
+Starten: Yizhan-4K-Kamera-V1.0.0.exe doppelklicken (keine Installation nötig).
+Die Kamera per USB anstecken – das Programm nimmt sie von selbst
+(sie meldet sich unter Windows als „4K Camera“).
+
+Fotos und Videos landen in „Bilder\Yizhan 4K“ (im Menü ⋮ änderbar).
+
+Tastenkürzel
+  Leertaste       Foto
+  R               Video starten / stoppen
+  S               Standbild
+  F               Vollbild (Esc beendet)
+  H / V           waagrecht / senkrecht spiegeln
+  K / G           Fadenkreuz / Raster
+  Mausrad, + / −  Zoom (Ziehen verschiebt den Ausschnitt)
+  0 / Doppelklick ganzes Bild
+  1               ein Kamerapixel je Bildschirmpixel
+  Strg+Q          Beenden
+
+Was die Kamera wirklich kann (am 07.10.2026 ausgelesen)
+  Auflösung bis 3840 × 2160 bei 30 Bildern pro Sekunde (auch 2560 × 1440,
+  1920 × 1080, 1280 × 720, 640 × 480). „60 MP“ ist eine hochgerechnete Angabe
+  des Herstellers; der Bildsensor liefert 8,3 Megapixel.
+  Regler: Helligkeit, Kontrast, Sättigung, Schärfe, Belichtung (Auto oder Stufe
+  −6 … +2), Belichtungskorrektur, Weißabgleich (Auto oder fest).
+  Kein Mikrofon – Videos sind ohne Ton.

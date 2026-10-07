@@ -1,0 +1,46 @@
+{
+    "name": "yizhan-4k-kamera",
+    "productName": "Yizhan 4K Kamera",
+    "version": "1.0.0",
+    "description": "Live-Bild, Fotos und Videos fuer die USB-Kamera Yizhan 4K 60MP",
+    "author": "cnc3d.tech",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/3d-cnc/Yizhan-4K-Kamera"
+    },
+    "private": true,
+    "type": "commonjs",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron .",
+        "pruefen": "electron . --pruefen",
+        "bauen": "electron-builder --win portable --publish never && node -e \"require('fs').renameSync('dist/Yizhan 4K Kamera.exe', '../Yizhan-4K-Kamera-V' + require('./package.json').version + '.exe')\""
+    },
+    "devDependencies": {
+        "electron": "44.5.1",
+        "electron-builder": "^26.15.3"
+    },
+    "build": {
+        "appId": "tech.cnc3d.yizhan-4k-kamera",
+        "productName": "Yizhan 4K Kamera",
+        "copyright": "cnc3d.tech",
+        "files": [
+            "main.js",
+            "preload.js",
+            "app/**/*"
+        ],
+        "directories": {
+            "output": "dist",
+            "buildResources": "build"
+        },
+        "win": {
+            "target": [
+                "portable"
+            ],
+            "icon": "build/icon.png"
+        },
+        "portable": {
+            "artifactName": "Yizhan 4K Kamera.${ext}"
+        }
+    }
+}

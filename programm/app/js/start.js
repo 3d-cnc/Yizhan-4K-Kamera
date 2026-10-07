@@ -1,0 +1,154 @@
+// Start: Teile verbinden, Tabs, Menü, Tastenkürzel, Hell/Dunkel
+function seiteZeigen(name) {
+    if (galerie.istOffen()) galerie.schliessen();
+    $$('.tab').forEach((t) => t.classList.toggle('aktiv', t.dataset.seite === name));
+    $$('.seite').forEach((s) => s.classList.toggle('aktiv', s.id === 'seite-' + name));
+    if (name === 'galerie') galerie.laden();
+    else requestAnimationFrame(() => ansicht.einpassen(true));
+}
+
+function themaSetzen(thema) {
+    document.documentElement.dataset.thema = thema;
+    speicher.schreiben('thema', thema);
+    try { localStorage.setItem('yizhan.thema', thema); } catch { /* egal */ }
+    kam.thema(thema);
+}
+
+let vollbild = false;
+function vollbildUmschalten(an = !vollbild) {
+    if (an === vollbild) return;
+    vollbild = an;
+    document.body.classList.toggle('vollbild', an);
+    if (an) seiteZeigen('live');
+    an ? kam.vollbild() : kam.vollbildAus();
+}
+
+const KUERZEL = [
+    ['Leertaste', 'Foto'],
+    ['R', 'Video starten / stoppen'],
+    ['S', 'Standbild'],
+    ['F', 'Vollbild (Esc beendet)'],
+    ['H / V', 'Waagrecht / senkrecht spiegeln'],
+    ['K / G', 'Fadenkreuz / Raster'],
+    ['+ / − / Mausrad', 'Zoom'],
+    ['0 / Doppelklick', 'Ganzes Bild'],
+    ['1', 'Ein Kamerapixel je Bildschirmpixel'],
+    ['← / →', 'Blättern in der Vorschau'],
+    ['Strg+Q', 'Beenden'],
+];
+
+document.addEventListener('DOMContentLoaded', async () => {
+    ansicht.init();
+    bildrateZaehlen();
+    aufnahme.init();
+    galerie.init();
+
+    $$('.tab').forEach((t) => t.addEventListener('click', () => seiteZeigen(t.dataset.seite)));
+    $('#thema-knopf').addEventListener('click', () => themaSetzen(document.documentElement.dataset.thema === 'hell' ? 'dunkel' : 'hell'));
+    kam.thema(document.documentElement.dataset.thema);
+    $('#vollbild').addEventListener('click', () => vollbildUmschalten());
+    $('#regler-standard').addEventListener('click', () => regler.standard());
+    $('#schaerfe-reset').addEventListener('click', () => { ansicht.besteSchaerfe = 0; });
+    $('#ordner-knopf').addEventListener('click', () => kam.ordnerOeffnen());
+    $('#hinweis-ok').addEventListener('click', () => $('#hinweis-dialog').classList.remove('offen'));
+
+    $('#aufloesung').addEventListener('change', (e) => {
+        kamera.aufloesung = e.target.value;
+        speicher.schreiben('aufloesung', kamera.aufloesung);
+        ansicht.besteSchaerfe = 0;
+        kamera.starten();
+    });
+    $('#kamera-wahl').addEventListener('change', (e) => {
+        kamera.geraetId = e.target.value;
+        speicher.schreiben('kamera', kamera.geraetId);
+        ansicht.besteSchaerfe = 0;
+        kamera.starten();
+    });
+
+    // Menü
+    const menue = $('#menue');
+    $('#menue-knopf').addEventListener('click', (e) => { e.stopPropagation(); menue.classList.toggle('offen'); });
+    document.addEventListener('click', () => menue.classList.remove('offen'));
+    menue.addEventListener('click', async (e) => {
+        const aktion = e.target.closest('button')?.dataset.aktion;
+        if (!aktion) return;
+        menue.classList.remove('offen');
+        if (aktion === 'ordner-oeffnen') kam.ordnerOeffnen();
+        if (aktion === 'ordner-waehlen') {
+            const neu = await kam.ordnerWaehlen();
+            if (neu) { aufnahme.platzZeigen(); galerie.laden(); toast(`Speicherordner: ${neu}`); }
+        }
+        if (aktion === 'kuerzel') hinweis('Tastenkürzel', `<table>${KUERZEL.map(([k, t]) => `<tr><td>${k}</td><td>${t}</td></tr>`).join('')}</table>`);
+        if (aktion === 'ueber') {
+            const v = await kam.version();
+            const s = kamera.spur?.getSettings();
+            hinweis('Yizhan 4K Kamera', `<p>Version ${v}</p><p>Kamera: ${kamera.name()}${s ? ` · ${s.width}×${s.height} · ${Math.round(s.frameRate)} B/s` : ''}</p><p>cnc3d.tech</p>`);
+        }
+        if (aktion === 'beenden') kam.beenden();
+    });
+
+    // Tastenkürzel – nicht, während in einem Eingabefeld getippt wird
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key.toLowerCase() === 'q') { e.preventDefault(); kam.beenden(); return; }
+        if (e.target.matches('input[type=number], input[type=text], select')) return;
+        if (e.ctrlKey || e.altKey || e.metaKey) return;
+        if ($('#hinweis-dialog').classList.contains('offen')) {
+            if (e.key === 'Escape' || e.key === 'Enter') $('#hinweis-dialog').classList.remove('offen');
+            return;
+        }
+        if (galerie.istOffen()) {
+            if (e.key === 'Escape') galerie.schliessen();
+            if (e.key === 'ArrowLeft') galerie.blaettern(-1);
+            if (e.key === 'ArrowRight') galerie.blaettern(1);
+            if (e.key === 'Delete') galerie.loeschen();
+            return;
+        }
+        const live = $('#seite-live').classList.contains('aktiv');
+        const taste = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+        const aktionen = {
+            ' ': () => aufnahme.foto(),
+            r: () => (aufnahme.laeuft() ? aufnahme.stoppen() : aufnahme.starten()),
+            s: () => ansicht.standbildUmschalten(),
+            f: () => vollbildUmschalten(),
+            Escape: () => vollbildUmschalten(false),
+            h: () => ansicht.umschalten('spiegelnH'),
+            v: () => ansicht.umschalten('spiegelnV'),
+            k: () => ansicht.umschalten('fadenkreuz'),
+            g: () => ansicht.umschalten('raster'),
+            '+': () => ansicht.zoomUm(ansicht.zoom * 1.25),
+            '-': () => ansicht.zoomUm(ansicht.zoom / 1.25),
+            0: () => ansicht.zuruecksetzen(),
+            1: () => ansicht.einsZuEins(),
+        };
+        if (!live || !aktionen[taste]) return;
+        e.preventDefault();
+        // Leertaste soll nicht zusätzlich den zuletzt geklickten Knopf drücken
+        document.activeElement?.blur();
+        aktionen[taste]();
+    });
+
+    await kamera.starten();
+});
+
+/* ------------------------------------------------------------ Selbsttest */
+
+window.pruefZustand = () => {
+    const s = kamera.spur?.getSettings() ?? {};
+    return { bilder: kamera.bilder, kamera: kamera.name(), breite: s.width, hoehe: s.height, fps: Math.round(kamera.fps), regler: $$('#regler .regler').length };
+};
+
+// Ersten Regler ohne Automatik eine Stufe weiter stellen, prüfen, zurückstellen
+window.pruefRegler = async () => {
+    const z = $$('#regler .regler').find((x) => !x.classList.contains('auto') && !x.querySelector('.auto-schalter')) ?? $$('#regler .regler')[0];
+    if (!z) return { ok: false, text: 'kein Regler' };
+    const k = z.dataset.k;
+    const schieber = z.querySelector('input');
+    const vorher = kamera.spur.getSettings()[k];
+    const ziel = Number(schieber.value) + Number(schieber.step) * (Number(schieber.value) + Number(schieber.step) <= Number(schieber.max) ? 1 : -1);
+    schieber.value = String(ziel);
+    schieber.dispatchEvent(new Event('input'));
+    await new Promise((r) => setTimeout(r, 500));
+    const nachher = kamera.spur.getSettings()[k];
+    await regler.anwenden({ [k]: vorher });
+    return { ok: nachher !== vorher, text: `${k} ${vorher} → ${nachher}` };
+};
