@@ -1,6 +1,6 @@
 # Offen
 
-Vorschläge heißen YZ-1, YZ-2 … und werden nie neu vergeben. Nächste freie Nummer: **YZ-24**.
+Vorschläge heißen YZ-1, YZ-2 … und werden nie neu vergeben. Nächste freie Nummer: **YZ-34**.
 
 ## Zu klären
 
@@ -29,6 +29,16 @@ Vorschläge heißen YZ-1, YZ-2 … und werden nie neu vergeben. Nächste freie N
 - **YZ-21 Kanten- und Mittenfinder:** Die App findet Kante, Ecke oder Bohrungsmitte nahe am Fadenkreuz und zeigt den Versatz in mm – optisches Antasten. Setzt YZ-2 voraus. Aufwand mittel bis groß.
 - **YZ-22 LinuxCNC-Kopplung:** Maschinenposition ins Foto schreiben, gefundenen Versatz aus YZ-21 als Nullpunkt übergeben, für YZ-19 ein Raster abfahren und an jeder Stelle ein Foto machen. Verbindung übers Netz zur Maschine. Aufwand groß.
 - **YZ-23 Projekte und Bericht:** Aufnahmen einem Projekt zuordnen (eigener Unterordner, Name im Dateinamen), Notizen je Foto, ausgewählte Fotos als PDF-Bericht (wie der Messbericht im OWON-Programm). Aufwand mittel.
+- **YZ-24 Zeitplan:** Überwachung, Intervallfotos oder Rückblick zu festen Zeiten von selbst starten und beenden (z. B. nachts, wenn der Drucker allein läuft). Aufwand klein.
+- **YZ-25 Nachricht aufs Handy:** Bei Bewegung oder Stillstand eine Nachricht mit Foto schicken, z. B. über ntfy oder Telegram. Braucht einen Dienst außerhalb des Programms. Aufwand mittel.
+- **YZ-26 Referenzbild-Wächter:** Ein Sollbild festhalten; weicht das Live-Bild zu stark ab (Werkstück verrutscht, Teil fehlt, Spannmittel offen), Alarm. Anders als YZ-15 vergleicht er mit einem festen Bild statt mit dem vorigen. Aufwand mittel.
+- **YZ-27 Pipette und Weißabgleich per Klick:** Farbe und Helligkeit an einer Stelle anzeigen; Klick auf eine graue Fläche stellt den Weißabgleich so, dass sie wirklich grau wird. Aufwand klein.
+- **YZ-28 Rauscharmes Foto:** 8 bis 32 Bilder hintereinander aufnehmen und mitteln – deutlich weniger Rauschen bei wenig Licht, gut für stehende Motive unter dem Mikroskop. Aufwand klein.
+- **YZ-29 HDR-Foto:** Belichtungsreihe (z. B. drei Stufen) zu einem Bild verrechnen, in dem helle und dunkle Stellen zugleich Zeichnung haben – für glänzende Metallteile und Lötstellen. Aufwand mittel.
+- **YZ-30 Verzeichnung korrigieren:** Einmal ein Schachbrett aufnehmen, daraus Linsenverzeichnung und Schräglage berechnen und Bild und Messungen gerade rechnen. Macht YZ-2, YZ-20 und YZ-21 am Bildrand genauer. Aufwand groß.
+- **YZ-31 Code-Leser:** QR-, DataMatrix- und Strichcodes im Bild erkennen und anzeigen bzw. kopieren (Teilenummern, Codes auf Platinen und Bauteilen). Aufwand mittel.
+- **YZ-32 Anmerkungen im Foto:** Pfeile, Kreise, Rahmen und Text in ein gespeichertes Foto zeichnen, als neue Datei speichern – für Dokumentation und Rückfragen. Aufwand mittel.
+- **YZ-33 Für Webseite und Forum:** Foto oder Videoausschnitt mit einem Klick verkleinern und passend ausgeben (Foto als WebP/JPG in fester Breite, kurzer Ausschnitt als WebP-Animation oder kleines MP4) – z. B. für Mod-Seiten auf cnc3d.tech. Aufwand mittel.
 
 ## Umgesetzt
 
