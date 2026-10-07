@@ -21,7 +21,6 @@ Vorschläge heißen YZ-1, YZ-2 … und werden nie neu vergeben. Nächste freie N
 - **YZ-8 Beschriftung:** Datum/Uhrzeit, freier Text und Maßstabsbalken wahlweise ins Foto einbrennen.
 - **YZ-9 Ausschnitt-Foto:** Nur den gezoomten Ausschnitt als Foto speichern.
 - **YZ-10 Fernansicht:** Live-Bild im WLAN aufs Handy (wie die Fernanzeige im OWON-Programm), mit Code.
-- **YZ-11 Versionsprüfung:** Menü prüft auf eine neue Fassung wie beim OWON-Programm. Das Repo ist seit 07.10.2026 öffentlich, die Abfrage der neuesten Version funktioniert ohne Anmeldung.
 - **YZ-12 Ton:** Videos mit Ton von einem wählbaren Mikrofon (die Kamera hat keins).
 - **YZ-13 Bildvergleich vorher/nachher:** Zwei Fotos aus der Galerie nebeneinander oder mit Schieber vergleichen.
 - **YZ-17 Lupe:** Kleines Fenster im Live-Bild zeigt die Stelle unter der Maus in 1:1 oder 2:1, während das ganze Bild eingepasst bleibt. Aufwand klein.
@@ -43,6 +42,7 @@ Vorschläge heißen YZ-1, YZ-2 … und werden nie neu vergeben. Nächste freie N
 
 ## Umgesetzt
 
+- 1.2.0 (07.10.2026): YZ-11 Versionsprüfung wie im OWON-Programm (Symbol neben dem Namen, Dialog „Version und Updates“, Prüfung beim Start abschaltbar, Link zum Download); Menü oben links mit Fenstergröße beim Start (Vorgabe 1920 × 1080, eigene Größe, gilt sofort, gespeichert) und Hell/Dunkel (auch Strg+Umschalt+L); nur eine Instanz des Programms. Am echten Gerät nicht geprüft – die Kamera war beim Test abgezogen; mit dem Testbild alles in Ordnung.
 - 1.1.1 (07.10.2026): Start und „Standard“ mit Automatik für Weißabgleich und Belichtung; beim Abschalten von Rückblick und gespiegelter Aufnahme werden alle Kamerabilder sauber freigegeben (vorher Warnung im Selbsttest).
 - 1.1.0 (07.10.2026): YZ-14 Rückblick (30–300 s, Taste B), YZ-15 Überwachung (Bereich, Empfindlichkeit mit Anzeige, Foto/Video mit Vorlauf/Meldung, Ruhezeit, Stillstand-Alarm, Ton), YZ-16 Fokus-Peaking und Zebra (Tasten P/Z, Empfindlichkeit, Farbe, Schwelle), YZ-18 Abspieler (Bild für Bild, Zeitlupe, Einzelbild speichern, Schnitt speichern). Seitenleiste in Reitern Aufnahme/Bild/Überwachung, Histogramm bleibt unten. Mit der echten Kamera geprüft, soweit ein schwarzes Bild das zulässt (Bewegung und Peaking nur mit dem Testbild).
 - 1.0.0 (07.10.2026): Live-Bild bis 4K/30, Auflösung wählbar, Zoom (Mausrad, Ziehen, 1:1), Spiegeln, Fadenkreuz, Raster (3–16, Farbe wählbar), Standbild, Vollbild; Foto (JPG/PNG, volle Auflösung), Video (MP4/H.264 oder WebM/VP9, 10–50 Mbit/s, stückweise auf die Platte, Platzanzeige, stoppt bei fast voller Platte), Intervallfotos; Regler aus der Kamera mit Auto-Schaltern, gemerkt je Kamera, „Standard“; Histogramm mit Anteil Schwarz/Weiß, Schärfewert der Bildmitte mit Bestwert; Galerie mit Vorschau, Öffnen, im Ordner zeigen, Kopieren, Papierkorb; Hell/Dunkel.

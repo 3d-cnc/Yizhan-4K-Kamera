@@ -3,6 +3,12 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('kam', {
     version: () => ipcRenderer.invoke('version'),
+    // Menü: Versionsprüfung, Fenstergröße beim Start, Links ins GitHub-Projekt
+    versionPruefen: () => ipcRenderer.invoke('version-pruefen'),
+    einstellungen: () => ipcRenderer.invoke('einstellungen'),
+    updatesBeimStart: (an) => ipcRenderer.invoke('updates-beim-start', an),
+    fenstergroesse: (breite, hoehe) => ipcRenderer.invoke('fenstergroesse', breite, hoehe),
+    linkOeffnen: (url) => ipcRenderer.send('link-oeffnen', url),
     // Speicherordner
     ordner: () => ipcRenderer.invoke('ordner'),
     ordnerWaehlen: () => ipcRenderer.invoke('ordner-waehlen'),

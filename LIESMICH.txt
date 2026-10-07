@@ -1,11 +1,16 @@
 Yizhan 4K Kamera
 ================
 
-Starten: Yizhan-4K-Kamera-V1.1.1.exe doppelklicken (keine Installation nötig).
+Starten: Yizhan-4K-Kamera-V1.2.0.exe doppelklicken (keine Installation nötig).
 Die Kamera per USB anstecken – das Programm nimmt sie von selbst
 (sie meldet sich unter Windows als „4K Camera“).
 
-Fotos und Videos landen in „Bilder\Yizhan 4K“ (im Menü ⋮ änderbar).
+Fotos und Videos landen in „Bilder\Yizhan 4K“ (im Menü änderbar).
+
+Menü (oben links): Nach Updates suchen, Fenstergröße beim Start (Vorgabe
+1920 × 1080), helles/dunkles Design, Speicherordner, Tastenkürzel, Beenden.
+Neben dem Namen steht die Version: grün = aktuell, rot = Update verfügbar
+(Klick führt zum Download), grau = ließ sich nicht prüfen.
 
 Tastenkürzel
   Leertaste       Foto
@@ -19,6 +24,7 @@ Tastenkürzel
   1               ein Kamerapixel je Bildschirmpixel
   B               Rückblick speichern (die letzten 30–300 s)
   P / Z           Fokus-Peaking / Zebra
+  Strg+Umschalt+L helles / dunkles Design
   Strg+Q          Beenden
 
 In der Vorschau eines Videos

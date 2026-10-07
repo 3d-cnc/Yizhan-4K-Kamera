@@ -31,7 +31,9 @@ Fotos und Videos landen in `Bilder\Yizhan 4K` (im Menü änderbar).
 - **Regler der Kamera:** Helligkeit, Kontrast, Sättigung, Schärfe, Belichtung und Weißabgleich (mit Automatik), Belichtungskorrektur; gemerkt je Kamera, „Standard“ stellt die Automatik wieder her.
 - **Galerie:** alle Fotos und Videos mit Vorschaubildern, große Ansicht, Öffnen, Im Ordner zeigen, Kopieren, Löschen in den Papierkorb.
 - **Abspieler:** Videos Bild für Bild vor und zurück, Zeitlupe (0,1× bis 2×), ein Bild als Foto speichern, Anfang und Ende setzen und den Ausschnitt als neue Datei speichern.
-- **Design:** dunkel als Vorgabe, hell per Knopf oben rechts; die Wahl bleibt gespeichert.
+- **Menü** (oben links): Nach Updates suchen, Fenstergröße beim Start (Vorgabe 1920 × 1080, auch eigene Größe; gilt sofort und bleibt gespeichert), helles oder dunkles Design, Speicherordner, Tastenkürzel, Beenden.
+- **Design:** dunkel als Vorgabe, hell per Knopf oben rechts (Mond/Sonne), im Menü oder mit Strg+Umschalt+L; die Wahl bleibt gespeichert.
+- **Versionsprüfung:** Neben dem Namen stehen die Version und ein Symbol. Es ist grün, wenn das Programm aktuell ist, rot, wenn es ein Update gibt (ein Klick führt zum Download), und grau, wenn sich das nicht prüfen lässt, etwa ohne Internet. Gefragt wird beim Start (abschaltbar) nach dem neuesten GitHub-Release dieses Repositorys.
 
 Tastenkürzel und Hinweise: [LIESMICH.txt](LIESMICH.txt). Stand, Vorschläge und offene Punkte: [OFFEN.md](OFFEN.md).
 
@@ -53,9 +55,10 @@ Der Selbsttest (siehe unten) läuft an der echten Kamera ohne Fehler durch: Live
 
 | Pfad | Inhalt |
 |---|---|
-| `programm/main.js` | Electron-Hülle: Fenster 1920 × 1080, Dateien (Fotos, Videos stückweise), Galerie über das eigene Protokoll `medien://` (mit Range und CORS), Vorschaubilder von Windows, Nachfrage beim Schließen während einer Aufnahme, Selbsttest |
+| `programm/main.js` | Electron-Hülle: Fenster in der eingestellten Größe (Vorgabe 1920 × 1080), Versionsprüfung, Dateien (Fotos, Videos stückweise), Galerie über das eigene Protokoll `medien://` (mit Range und CORS), Vorschaubilder von Windows, Nachfrage beim Schließen während einer Aufnahme, Selbsttest |
 | `programm/preload.js` | Brücke zwischen Seite und Programm (`window.kam`) |
 | `programm/app/index.html`, `stil.css` | Oberfläche |
+| `programm/app/js/menue.js` | Menü, Hell/Dunkel, Version und Updates, Fenstergröße beim Start |
 | `programm/app/js/kamera.js` | Kamera wählen und starten, Bildrate, Regler aus den Fähigkeiten der Kamera |
 | `programm/app/js/ansicht.js` | Einpassen, Zoom, Spiegeln, Fadenkreuz, Raster, Standbild, Histogramm, Schärfewert |
 | `programm/app/js/aufnahme.js` | Foto, Video (`MediaRecorder`), Intervallfotos |
@@ -78,7 +81,7 @@ node node_modules/electron/install.js
 npm run bauen
 ```
 
-`npm run bauen` legt die .exe mit der Version im Namen in den obersten Ordner, z. B. `Yizhan-4K-Kamera-V1.1.1.exe`. Die .exe selbst ist nicht im Repository. Bricht das Bauen beim Programmsymbol mit Exit-Code 3221225477 ab, einfach noch einmal starten.
+`npm run bauen` legt die .exe mit der Version im Namen in den obersten Ordner, z. B. `Yizhan-4K-Kamera-V1.2.0.exe`. Die .exe selbst ist nicht im Repository. Bricht das Bauen beim Programmsymbol mit Exit-Code 3221225477 ab, einfach noch einmal starten.
 
 ## Selbsttest
 
@@ -90,6 +93,7 @@ npx electron . --demo --pruefen=bild.png
 
 Der Selbsttest startet das Programm in einem durchsichtigen Fenster mit eigenem, leerem Benutzerordner. `--demo` nimmt statt der echten Kamera das Testbild von Chromium, das sich bewegt. Er prüft:
 - Live-Bild, Regler und dass der Weißabgleich mit Automatik startet,
+- Hell/Dunkel (Vorgabe dunkel, Knopf, Menü, Strg+Umschalt+L, gespeichert), Versionsvergleich, Versionsprüfung gegen GitHub und den Update-Hinweis, Fenstergröße 1600 × 900 (gilt sofort, gespeichert, zu kleine Werte abgelehnt) und zurück,
 - dass die Live-Seite und jeder Reiter der Seitenleiste auf 1920 × 1080 ohne Scrollen passen,
 - Foto in voller Auflösung, gespiegeltes Video (abspielbar), Intervallfotos, Standbild,
 - Peaking und Zebra, Rückblick (füllen, speichern, abspielbar),

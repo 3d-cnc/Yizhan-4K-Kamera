@@ -9,17 +9,21 @@
  *  - Galerie: Dateien im Speicherordner auflisten, ueber medien:// zeigen (mit Range fuer Videos)
  *  - Oeffnen, im Ordner zeigen, in die Zwischenablage, in den Papierkorb
  *  - Schliessen waehrend einer Aufnahme: nachfragen, Aufnahme sauber beenden
- *  - Der Fensterinhalt startet 1920 x 1080; gemerkt wird die Position (fenster.json).
+ *  - Der Fensterinhalt startet in der eingestellten Groesse (Vorgabe 1920 x 1080, aenderbar im Menue,
+ *    einstellungen.json); gemerkt wird die Position (fenster.json).
+ *  - Versionspruefung gegen das neueste Release auf GitHub (Repository aus package.json), wie beim
+ *    OWON-Programm.
  *
  * `electron . --pruefen[=bild.png]` startet unsichtbar, nimmt Foto und Video auf,
  * prueft die Dateien, fotografiert jede Seite und beendet sich - mit Fehlercode,
  * wenn etwas nicht stimmt. `--demo` nimmt statt der echten Kamera Chromiums Testbild.
  */
 
-const { app, BrowserWindow, ClipboardItem, clipboard, dialog, ipcMain, nativeImage, nativeTheme, protocol, screen, shell } = require('electron');
+const { app, BrowserWindow, ClipboardItem, Menu, clipboard, dialog, ipcMain, nativeImage, nativeTheme, net, protocol, screen, shell } = require('electron');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const paket = require('./package.json');
 
 const pruefen = process.argv.find((a) => a.startsWith('--pruefen'));
 const demo = process.argv.includes('--demo');
@@ -40,9 +44,12 @@ let fenster = null;
 
 /* ------------------------------------------------------------ Einstellungen und Fensterlage */
 
+// Die Oberflaeche ist auf 1920 x 1080 ausgelegt: so gross ist der Fensterinhalt beim Start,
+// solange im Menue nichts anderes eingestellt ist
 const BREITE = 1920;
 const HOEHE = 1080;
-const TITELLEISTE = 40;
+const GRENZEN = { breite: [1024, 7680], hoehe: [600, 4320] };
+const TITELLEISTE = 40;   // Rahmen und Titelleiste kommen zum Fensterinhalt noch dazu
 const HINTERGRUND = { dunkel: '#0e1115', hell: '#eef1f5' };
 const datei = (name) => path.join(app.getPath('userData'), name);
 
@@ -63,11 +70,16 @@ function jsonSchreiben(name, wert) {
     }
 }
 
-let einstellungen = { thema: 'dunkel', ordner: '' };
+const gueltig = (wert, [min, max]) => Number.isInteger(wert) && wert >= min && wert <= max;
+
+let einstellungen = { breite: BREITE, hoehe: HOEHE, updatesBeimStart: true, thema: 'dunkel', ordner: '' };
 
 function einstellungenLesen() {
     const e = jsonLesen('einstellungen.json');
     einstellungen = {
+        breite: gueltig(e.breite, GRENZEN.breite) ? e.breite : BREITE,
+        hoehe: gueltig(e.hoehe, GRENZEN.hoehe) ? e.hoehe : HOEHE,
+        updatesBeimStart: e.updatesBeimStart !== false,
         thema: e.thema === 'hell' ? 'hell' : 'dunkel',
         ordner: typeof e.ordner === 'string' ? e.ordner : '',
     };
@@ -80,10 +92,12 @@ const speicherOrdner = () => einstellungen.ordner || vorgabeOrdner();
 function lageLesen() {
     const lage = jsonLesen('fenster.json');
     const punkt = Number.isFinite(lage.x) ? { x: lage.x + 100, y: lage.y + 50 } : screen.getCursorScreenPoint();
+    const { breite, hoehe } = einstellungen;
     const b = screen.getDisplayNearestPoint(punkt).workArea;
-    const passt = BREITE <= b.width && HOEHE + TITELLEISTE <= b.height;
-    const x = Number.isFinite(lage.x) ? Math.min(Math.max(lage.x, b.x), b.x + b.width - BREITE) : b.x + Math.round((b.width - BREITE) / 2);
-    const y = Number.isFinite(lage.y) ? Math.min(Math.max(lage.y, b.y), b.y + b.height - HOEHE - TITELLEISTE) : b.y + Math.max(0, Math.round((b.height - HOEHE - TITELLEISTE) / 2));
+    // Zu kleiner Bildschirm: maximiert
+    const passt = breite <= b.width && hoehe + TITELLEISTE <= b.height;
+    const x = Number.isFinite(lage.x) ? Math.min(Math.max(lage.x, b.x), b.x + b.width - breite) : b.x + Math.round((b.width - breite) / 2);
+    const y = Number.isFinite(lage.y) ? Math.min(Math.max(lage.y, b.y), b.y + b.height - hoehe - TITELLEISTE) : b.y + Math.max(0, Math.round((b.height - hoehe - TITELLEISTE) / 2));
     return passt ? { x, y, maximiert: !!lage.maximiert } : { maximiert: true };
 }
 
@@ -104,8 +118,8 @@ function fensterOeffnen() {
     fenster = new BrowserWindow({
         x: lage.x,
         y: lage.y,
-        width: BREITE,
-        height: HOEHE,
+        width: einstellungen.breite,
+        height: einstellungen.hoehe,
         useContentSize: true,
         minWidth: 960,
         minHeight: 600,
@@ -384,6 +398,110 @@ function medienAntwort(anfrage) {
 /* ------------------------------------------------------------ Sonstiges */
 
 ipcMain.handle('version', () => app.getVersion());
+
+/* ------------------------------------------------------------ Menue: Fenstergroesse, Updates beim Start */
+
+ipcMain.handle('einstellungen', () => {
+    const b = screen.getDisplayMatching(fenster.getBounds()).workArea;
+    const [breite, hoehe] = fenster.getContentSize();
+    return {
+        ...einstellungen,
+        vorgabe: { breite: BREITE, hoehe: HOEHE },
+        grenzen: GRENZEN,
+        jetzt: { breite, hoehe },
+        // So gross kann der Fensterinhalt auf diesem Bildschirm hoechstens werden
+        bildschirm: { breite: b.width, hoehe: b.height - TITELLEISTE },
+    };
+});
+
+ipcMain.handle('updates-beim-start', (_e, an) => {
+    einstellungen.updatesBeimStart = !!an;
+    jsonSchreiben('einstellungen.json', einstellungen);
+    return einstellungen.updatesBeimStart;
+});
+
+// Neue Startgroesse speichern und gleich anwenden; passt sie nicht auf den Bildschirm, wird verkleinert
+ipcMain.handle('fenstergroesse', (_e, breite, hoehe) => {
+    if (!gueltig(breite, GRENZEN.breite) || !gueltig(hoehe, GRENZEN.hoehe)) {
+        return { ok: false, grund: `Erlaubt sind ${GRENZEN.breite.join('–')} × ${GRENZEN.hoehe.join('–')} Pixel.` };
+    }
+    einstellungen.breite = breite;
+    einstellungen.hoehe = hoehe;
+    jsonSchreiben('einstellungen.json', einstellungen);
+
+    const b = screen.getDisplayMatching(fenster.getBounds()).workArea;
+    const w = Math.min(breite, b.width);
+    const h = Math.min(hoehe, b.height - TITELLEISTE);
+    if (fenster.isFullScreen()) fenster.setFullScreen(false);
+    if (fenster.isMaximized()) fenster.unmaximize();
+    fenster.setContentSize(w, h);
+    // Ragt das Fenster jetzt ueber den Bildschirmrand, zurueck auf den Bildschirm schieben
+    const r = fenster.getBounds();
+    fenster.setPosition(Math.min(Math.max(r.x, b.x), b.x + b.width - r.width), Math.min(Math.max(r.y, b.y), b.y + b.height - r.height));
+    return { ok: true, breite, hoehe, angewendet: { breite: w, hoehe: h }, verkleinert: w < breite || h < hoehe };
+});
+
+/* ------------------------------------------------------------ Versionspruefung */
+
+// "https://github.com/3d-cnc/Yizhan-4K-Kamera" -> "3d-cnc/Yizhan-4K-Kamera"
+const REPO = String(paket.repository?.url ?? paket.repository ?? '').replace(/^(git\+)?https:\/\/github\.com\/|^github:|\.git$/g, '');
+
+// 1.10.0 > 1.9.3; ein Zusatz wie -beta zaehlt als aelter als die Version ohne
+function versionVergleich(a, b) {
+    const teile = (v) => String(v).trim().replace(/^v/i, '').split('-');
+    const [ka, za] = teile(a), [kb, zb] = teile(b);
+    const na = ka.split('.').map(Number), nb = kb.split('.').map(Number);
+    for (let i = 0; i < Math.max(na.length, nb.length); i++) {
+        const d = (na[i] || 0) - (nb[i] || 0);
+        if (d) return Math.sign(d);
+    }
+    if (za && !zb) return -1;
+    if (!za && zb) return 1;
+    return 0;
+}
+
+async function versionPruefen() {
+    const installiert = app.getVersion();
+    const seite = `https://github.com/${REPO}/releases`;
+    const ergebnis = (status, mehr = {}) => ({ status, installiert, seite, geprueft: Date.now(), ...mehr });
+    let antwort;
+    try {
+        antwort = await net.fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
+            headers: { Accept: 'application/vnd.github+json', 'User-Agent': `Yizhan-4K-Kamera/${installiert}` },
+            signal: AbortSignal.timeout(10000),
+        });
+    } catch {
+        return ergebnis('unbekannt', { grund: 'Keine Verbindung zu GitHub. Später noch einmal versuchen.' });
+    }
+    if (antwort.status === 404) {
+        return ergebnis('unbekannt', { grund: 'GitHub kennt keine öffentliche Version.' });
+    }
+    if (antwort.status === 403 || antwort.status === 429) {
+        return ergebnis('unbekannt', { grund: 'GitHub nimmt gerade keine Anfragen an (zu viele in kurzer Zeit). In einer Stunde noch einmal versuchen.' });
+    }
+    if (!antwort.ok) return ergebnis('unbekannt', { grund: `GitHub antwortet mit Fehler ${antwort.status}.` });
+
+    const r = await antwort.json();
+    const neueste = String(r.tag_name || '').replace(/^v/i, '');
+    if (!neueste) return ergebnis('unbekannt', { grund: 'GitHub nennt keine Versionsnummer.' });
+    const neuer = versionVergleich(neueste, installiert) > 0;
+    return ergebnis(neuer ? 'neu' : 'aktuell', {
+        neueste,
+        datum: r.published_at,
+        notizen: String(r.body || '').slice(0, 4000),
+        seite: r.html_url || seite,
+        download: (r.assets || []).find((a) => /\.exe$/i.test(a.name))?.browser_download_url ?? null,
+    });
+}
+
+ipcMain.handle('version-pruefen', () => versionPruefen());
+
+// Nur Links ins eigene GitHub-Projekt oeffnen - im normalen Browser, nie im Programmfenster
+// Ohne Adresse: die Seite mit allen Versionen
+ipcMain.on('link-oeffnen', (_e, url) => {
+    if (!url) url = `https://github.com/${REPO}/releases`;
+    if (typeof url === 'string' && url.startsWith(`https://github.com/${REPO}/`)) shell.openExternal(url);
+});
 ipcMain.on('thema', (_e, thema) => {
     thema = thema === 'hell' ? 'hell' : 'dunkel';
     nativeTheme.themeSource = thema === 'hell' ? 'light' : 'dark';
@@ -626,10 +744,50 @@ async function selbsttest() {
         pruefe((await js('kam.dateien()')).length === vorLoeschen - 1, 'Löschen aus der Vorschau');
         await js('galerie.schliessen(); pruefKlick(".tab[data-seite=live]")');
 
-        // Hell
+        // Hell/Dunkel: Vorgabe dunkel, umschalten per Knopf, Menü und Strg+Umschalt+L, gespeichert
+        pruefe(await js('document.documentElement.dataset.thema') === 'dunkel', 'Dunkel ist die Vorgabe');
         await js('pruefKlick("#thema-knopf")');
         await foto('hell');
-        await js('pruefKlick("#thema-knopf")');
+        const hellGemerkt = jsonLesen('einstellungen.json').thema;
+        await js('pruefKlick("#menue-knopf"); pruefKlick("#menue [data-aktion=thema]");');
+        const nachMenue = await js('document.documentElement.dataset.thema');
+        await js('document.dispatchEvent(new KeyboardEvent("keydown", { key: "L", ctrlKey: true, shiftKey: true, bubbles: true }))');
+        const nachTaste = await js('document.documentElement.dataset.thema');
+        await js('pruefKlick("#menue-knopf"); pruefKlick("#menue [data-aktion=thema]");');
+        pruefe(hellGemerkt === 'hell' && nachMenue === 'dunkel' && nachTaste === 'hell' && await js('document.documentElement.dataset.thema') === 'dunkel' && jsonLesen('einstellungen.json').thema === 'dunkel',
+            `Hell/Dunkel per Knopf, Menü und Strg+Umschalt+L, gespeichert (${hellGemerkt}, ${nachMenue}, ${nachTaste})`);
+
+        // Versionsvergleich und Versionsprüfung gegen GitHub
+        const vergleich = [['1.10.0', '1.9.3', 1], ['1.1.1', '1.1.1', 0], ['v1.2.0', '1.2.0', 0], ['1.2.0-beta', '1.2.0', -1], ['1.1', '1.1.0', 0], ['2.0.0', '10.0.0', -1]];
+        pruefe(vergleich.every(([a, b, soll]) => versionVergleich(a, b) === soll), 'Versionsvergleich');
+        pruefe(REPO === '3d-cnc/Yizhan-4K-Kamera', `Repository für die Prüfung: ${REPO}`);
+        await js('versionPruefen()');
+        const v = await js('({ status: version.ergebnis?.status, neueste: version.ergebnis?.neueste, grund: version.ergebnis?.grund, klasse: document.querySelector("#version-knopf").className, text: document.querySelector("#version-text").textContent })');
+        pruefe(['aktuell', 'neu', 'unbekannt'].includes(v.status) && v.klasse === v.status && v.text === 'v' + app.getVersion(),
+            `Versionsprüfung (${v.status}${v.neueste ? ', neueste ' + v.neueste : ''}${v.grund ? ', ' + v.grund : ''})`);
+        // Update-Hinweis: so sähe es aus, wenn es eine neuere Version gäbe
+        await js(`version.ergebnis = { status: 'neu', installiert: version.installiert, neueste: '9.9.9', datum: new Date().toISOString(), notizen: '- Beispiel für den Selbsttest', seite: 'https://github.com/${REPO}/releases/tag/v9.9.9', geprueft: Date.now() }; versionAnzeigen(); versionsDialog(false);`);
+        await foto('update');
+        const hinweisNeu = await js('({ knopf: document.querySelector("#version-knopf").className, menue: document.querySelector("#menue").classList.contains("update"), download: document.querySelector("#v-seite").textContent })');
+        pruefe(hinweisNeu.knopf === 'neu' && hinweisNeu.menue && hinweisNeu.download === 'Update herunterladen', 'Update-Hinweis an Version, Menü und Dialog');
+        await js('document.querySelector("#versionsdialog").close(); version.ergebnis = null; versionAnzeigen();');
+
+        // Fenstergröße: 1600 × 900 gilt sofort und wird gespeichert, dann zurück auf 1920 × 1080
+        const klein = await js('kam.fenstergroesse(1600, 900)');
+        await warte(600);
+        const masseKlein = await js('[innerWidth, innerHeight]');
+        pruefe(klein.ok && masseKlein[0] === 1600 && masseKlein[1] === 900 && jsonLesen('einstellungen.json').breite === 1600, `Fenstergröße 1600 × 900 (${masseKlein.join(' × ')})`);
+        await foto('1600x900');
+        const falsch = await js('kam.fenstergroesse(100, 100)');
+        pruefe(!falsch.ok, 'Zu kleine Fenstergröße abgelehnt');
+        await js('kam.fenstergroesse(1920, 1080)');
+        await warte(600);
+        const masseZurueck = await js('[innerWidth, innerHeight]');
+        pruefe(masseZurueck[0] === 1920 && masseZurueck[1] === 1080, `Zurück auf 1920 × 1080 (${masseZurueck.join(' × ')})`);
+        await js('pruefKlick("#menue-knopf"); pruefKlick("#menue [data-aktion=groesse]");');
+        await warte(300);
+        await foto('groesse');
+        await js('pruefKlick("#g-abbrechen")');
         await foto();
 
         pruefe(seitenFehler.length === 0, `keine Fehler in der Seite${seitenFehler.length ? ': ' + seitenFehler.join(' | ') : ''}`);
@@ -643,11 +801,33 @@ async function selbsttest() {
 
 /* ------------------------------------------------------------ Start */
 
-app.whenReady().then(() => {
-    einstellungenLesen();
-    protocol.handle('medien', medienAntwort);
-    fensterOeffnen();
-    if (pruefen) fenster.webContents.once('did-finish-load', () => selbsttest());
-});
+// Nur eine Instanz: die Kamera laesst sich ohnehin nicht zweimal oeffnen – stattdessen das Fenster nach vorn holen
+if (!pruefen && !app.requestSingleInstanceLock()) {
+    app.quit();
+} else {
+    app.on('second-instance', () => {
+        if (fenster) {
+            if (fenster.isMinimized()) fenster.restore();
+            fenster.focus();
+        }
+    });
 
-app.on('window-all-closed', () => app.quit());
+    app.whenReady().then(() => {
+        // Kein sichtbares Menue - nur F12 fuer die Entwicklerwerkzeuge, Strg+R zum Neuladen, F11 Vollbild
+        Menu.setApplicationMenu(Menu.buildFromTemplate([{
+            label: 'Ansicht',
+            visible: false,
+            submenu: [
+                { role: 'toggleDevTools', accelerator: 'F12' },
+                { role: 'reload', accelerator: 'CmdOrCtrl+R' },
+                { role: 'togglefullscreen', accelerator: 'F11' },
+            ],
+        }]));
+        einstellungenLesen();
+        protocol.handle('medien', medienAntwort);
+        fensterOeffnen();
+        if (pruefen) fenster.webContents.once('did-finish-load', () => selbsttest());
+    });
+
+    app.on('window-all-closed', () => app.quit());
+}

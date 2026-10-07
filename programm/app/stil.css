@@ -51,7 +51,8 @@ button.klein-knopf { padding: 2px 9px; font-size: 12px; }
 #thema-knopf .sonne { display: none; }
 :root[data-thema="hell"] #thema-knopf .sonne { display: block; }
 :root[data-thema="hell"] #thema-knopf .mond { display: none; }
-#menue-knopf { padding: 5px 6px; line-height: 0; }
+#menue-knopf { padding: 6px 8px; line-height: 0; }
+#menue-knopf[aria-expanded="true"] { background: var(--knopf-hover); }
 select, input[type=number] { background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
 input[type=number] { width: 78px; font-family: var(--mono); }
 input[type=color] { width: 34px; height: 32px; padding: 2px; background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
@@ -59,11 +60,46 @@ label.klein { color: var(--muted); font-size: 12px; display: flex; gap: 6px; ali
 label.klein select, label.klein input { color: var(--text); font-size: 13px; }
 .kbd { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: auto; padding-left: 20px; }
 
-.menue-halter { position: relative; }
-.menue { display: none; position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 240px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 5px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+/* ---------- Menü, Version, Dialoge (wie im OWON-Programm) ---------- */
+.menue { position: fixed; z-index: 60; min-width: 300px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 6px; box-shadow: 0 14px 36px rgba(0, 0, 0, .45); display: none; }
 .menue.offen { display: block; }
-.menue button { display: flex; width: 100%; text-align: left; background: transparent; border: 0; padding: 7px 10px; }
-.menue hr { border: 0; border-top: 1px solid var(--line); margin: 4px 2px; }
+.menue button { display: flex; width: 100%; align-items: center; gap: 24px; background: transparent; border: 0; text-align: left; padding: 8px 10px; border-radius: 6px; }
+.menue button:hover, .menue button:focus-visible { background: var(--knopf-hover); outline: none; }
+.menue button > span:first-child { flex: 1; }
+.menue kbd { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.menue hr { border: 0; border-top: 1px solid var(--line); margin: 6px 4px; }
+.menue .punkt-neu { width: 8px; height: 8px; border-radius: 50%; background: var(--err); display: none; }
+.menue.update .punkt-neu { display: inline-block; }
+#version-knopf { display: flex; align-items: center; gap: 7px; padding: 3px 10px 3px 6px; border-radius: 99px; font-family: var(--mono); font-size: 12px; color: var(--muted); background: transparent; }
+#version-knopf:hover { background: var(--knopf); color: var(--text); }
+.v-symbol { width: 16px; height: 16px; flex: none; border-radius: 50%; display: inline-grid; place-items: center; font: 700 11px/1 "Segoe UI", sans-serif; color: var(--panel); background: var(--muted); }
+.aktuell .v-symbol { background: var(--ok); }
+.neu .v-symbol { background: var(--err); color: #fff; }
+#version-knopf.neu { border-color: var(--err); color: var(--err); }
+.pruefe .v-symbol { animation: puls 1s ease-in-out infinite; }
+@keyframes puls { 50% { opacity: .3; } }
+.hinweis { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+dialog.fenster { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 12px; padding: 18px; width: min(560px, calc(100vw - 32px)); }
+dialog.fenster::backdrop { background: rgba(0, 0, 0, .55); }
+dialog.fenster h3 { margin: 0 0 4px; font-size: 16px; }
+.v-status { display: flex; gap: 12px; align-items: flex-start; margin: 12px 0; padding: 12px; background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; }
+.v-status .v-symbol { width: 26px; height: 26px; font-size: 15px; }
+.v-status b { font-size: 15px; }
+.v-status .hinweis { margin-top: 2px; }
+.v-tabelle { border-collapse: collapse; width: 100%; font-size: 13px; }
+.v-tabelle td { padding: 4px 0; border-bottom: 1px solid var(--line); }
+.v-tabelle td:first-child { color: var(--muted); width: 45%; }
+.v-tabelle td:last-child { font-family: var(--mono); }
+#v-notizen { white-space: pre-wrap; font: 12px/1.5 var(--mono); background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin: 6px 0 0; max-height: 200px; overflow: auto; }
+.v-zwischen { color: var(--muted); font-size: 12px; margin-top: 12px; }
+.groessen { display: grid; gap: 4px; margin-top: 12px; }
+.groessen label { display: flex; gap: 10px; align-items: center; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+.groessen label:hover { background: var(--panel2); }
+.groessen label.gesperrt { opacity: .45; cursor: default; }
+.groessen .masse { font-family: var(--mono); min-width: 120px; }
+.groessen small { color: var(--muted); }
+.groessen input[type=text] { width: 80px; font-family: var(--mono); background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+#g-info.fehler { color: var(--err); }
 
 #meldung { flex: none; display: none; margin: 12px 16px 0; background: color-mix(in srgb, var(--err) 18%, var(--panel)); border: 1px solid var(--err); border-radius: 8px; padding: 10px 14px; }
 #meldung.sichtbar { display: block; }

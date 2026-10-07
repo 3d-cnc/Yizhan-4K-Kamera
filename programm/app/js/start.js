@@ -1,4 +1,4 @@
-// Start: Teile verbinden, Tabs, Menü, Tastenkürzel, Hell/Dunkel
+// Start: Teile verbinden, Tabs, Tastenkürzel (Menü, Hell/Dunkel, Version: menue.js)
 function seiteZeigen(name) {
     if (galerie.istOffen()) galerie.schliessen();
     if (wache.waehlt) wache.auswaehlen(false);
@@ -6,13 +6,6 @@ function seiteZeigen(name) {
     $$('.seite').forEach((s) => s.classList.toggle('aktiv', s.id === 'seite-' + name));
     if (name === 'galerie') galerie.laden();
     else requestAnimationFrame(() => ansicht.einpassen(true));
-}
-
-function themaSetzen(thema) {
-    document.documentElement.dataset.thema = thema;
-    speicher.schreiben('thema', thema);
-    try { localStorage.setItem('yizhan.thema', thema); } catch { /* egal */ }
-    kam.thema(thema);
 }
 
 let vollbild = false;
@@ -40,6 +33,7 @@ const KUERZEL = [
     ['Bild ↑ / Bild ↓', 'Vorschau: blättern (auch bei Videos)'],
     ['Leertaste', 'Video in der Vorschau abspielen / anhalten'],
     ['I / O', 'Schnitt: Anfang / Ende setzen'],
+    ['Strg+Umschalt+L', 'Helles / dunkles Design'],
     ['Strg+Q', 'Beenden'],
 ];
 
@@ -64,8 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     leisteZeigen(speicher.lesen('leiste', 'aufnahme'));
 
     $$('.tab').forEach((t) => t.addEventListener('click', () => seiteZeigen(t.dataset.seite)));
-    $('#thema-knopf').addEventListener('click', () => themaSetzen(document.documentElement.dataset.thema === 'hell' ? 'dunkel' : 'hell'));
-    kam.thema(document.documentElement.dataset.thema);
+    menueInit();
     $('#vollbild').addEventListener('click', () => vollbildUmschalten());
     $('#regler-standard').addEventListener('click', () => regler.standard());
     $('#schaerfe-reset').addEventListener('click', () => { ansicht.besteSchaerfe = 0; });
@@ -85,32 +78,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         kamera.starten();
     });
 
-    // Menü
-    const menue = $('#menue');
-    $('#menue-knopf').addEventListener('click', (e) => { e.stopPropagation(); menue.classList.toggle('offen'); });
-    document.addEventListener('click', () => menue.classList.remove('offen'));
-    menue.addEventListener('click', async (e) => {
-        const aktion = e.target.closest('button')?.dataset.aktion;
-        if (!aktion) return;
-        menue.classList.remove('offen');
-        if (aktion === 'ordner-oeffnen') kam.ordnerOeffnen();
-        if (aktion === 'ordner-waehlen') {
-            const neu = await kam.ordnerWaehlen();
-            if (neu) { aufnahme.platzZeigen(); galerie.laden(); toast(`Speicherordner: ${neu}`); }
-        }
-        if (aktion === 'kuerzel') hinweis('Tastenkürzel', `<table>${KUERZEL.map(([k, t]) => `<tr><td>${k}</td><td>${t}</td></tr>`).join('')}</table>`);
-        if (aktion === 'ueber') {
-            const v = await kam.version();
-            const s = kamera.spur?.getSettings();
-            hinweis('Yizhan 4K Kamera', `<p>Version ${v}</p><p>Kamera: ${kamera.name()}${s ? ` · ${s.width}×${s.height} · ${Math.round(s.frameRate)} B/s` : ''}</p><p>cnc3d.tech</p>`);
-        }
-        if (aktion === 'beenden') kam.beenden();
-    });
-
     // Tastenkürzel – nicht, während in einem Eingabefeld getippt wird
     document.addEventListener('keydown', (e) => {
         if (e.ctrlKey && e.key.toLowerCase() === 'q') { e.preventDefault(); kam.beenden(); return; }
-        if (e.target.matches('input[type=number], input[type=text], select')) return;
+        if (e.target.matches?.('input[type=number], input[type=text], select')) return;
+        // Offene Dialoge (Version, Fenstergröße) und das Menü behalten ihre Tasten
+        if (document.querySelector('dialog[open]') || $('#menue').classList.contains('offen')) return;
         if (e.ctrlKey || e.altKey || e.metaKey) return;
         if ($('#hinweis-dialog').classList.contains('offen')) {
             if (e.key === 'Escape' || e.key === 'Enter') $('#hinweis-dialog').classList.remove('offen');
